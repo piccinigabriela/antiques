@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Compatibility shim for environment scripts attempting to assign to window.fetch
+      try {
+        let _currentFetch = window.fetch;
+        Object.defineProperty(window, 'fetch', {
+          get() {
+            return _currentFetch;
+          },
+          set(newFetch) {
+            _currentFetch = newFetch;
+          },
+          configurable: true,
+          enumerable: true,
+        });
+      } catch (e) {
+        // Fallback if defineProperty fails
+      }
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catálogo y Mercado de Anticuarios</title>
+    <meta name="description" content="Plataforma y catálogo de alta antigüedad con peritaje colegiado, gestión de inventario multi-vendedor, negociación de ofertas y cierre por WhatsApp." />
+    <meta property="og:title" content="Catálogo y Mercado de Anticuarios" />
+    <meta property="og:description" content="Plataforma y catálogo de alta antigüedad con peritaje colegiado, gestión de inventario multi-vendedor, negociación de ofertas y cierre por WhatsApp." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#fcfbf9] text-[#1c1917] font-sans antialiased selection:bg-[#d97706]/20">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

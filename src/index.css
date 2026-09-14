@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar and subtle gallery transitions */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f7f5f0;
+}
+::-webkit-scrollbar-thumb {
+  background: #d6cfc7;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8aea3;
+}
