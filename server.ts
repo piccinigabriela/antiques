@@ -54,27 +54,23 @@ function escapeCsvField(str: string | undefined | null): string {
   return `"${cleaned}"`;
 }
 
-// Google / Pinterest taxonomy category mapper
+// Google / Pinterest taxonomy category mapper (Numeric IDs preferred by Pinterest / Google Merchant)
 function getGoogleCategory(cat: string): string {
   switch (cat) {
     case "Muebles":
-      return "Antiques & Collectibles > Antique Furniture";
+      return "436"; // Antiques & Collectibles > Antique Furniture / 2047
     case "Arte y Pintura":
-      return "Arts & Entertainment > Artwork";
     case "Esculturas y Bronces":
-      return "Arts & Entertainment > Artwork > Sculptures & Statues";
+      return "500044"; // Arts & Entertainment > Artwork
     case "Libros y Manuscritos":
-      return "Media > Books";
+      return "784"; // Media > Books
     case "Relojería":
-      return "Apparel & Accessories > Jewelry > Watches";
+      return "201"; // Apparel & Accessories > Jewelry > Watches
     case "Cerámica y Porcelana":
-      return "Home & Garden > Kitchen & Dining > Tableware";
-    case "Iluminación":
-      return "Home & Garden > Lighting";
     case "Platería y Orfebrería":
     case "Objetos de Colección":
     default:
-      return "Antiques & Collectibles";
+      return "436"; // Antiques & Collectibles
   }
 }
 
@@ -212,6 +208,12 @@ function getBaseUrl(req: express.Request): string {
   const proto = req.get("x-forwarded-proto") || req.protocol || "https";
   return `${proto}://${host}`;
 }
+
+// Pinterest HTML file verification fallback
+app.get("/pinterest-7108a073dcf7a7f7246d2952efcf4e0a.html", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send("pinterest-site-verification=7108a073dcf7a7f7246d2952efcf4e0a");
+});
 
 // Pinterest Shopping XML / RSS Feed
 app.get(["/api/pinterest-feed.xml", "/api/pinterest-feed.rss", "/pinterest-feed.xml"], async (req, res) => {
