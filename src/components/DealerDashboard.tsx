@@ -16,7 +16,12 @@ import {
   ExternalLink,
   Upload,
   Image as ImageIcon,
-  Lock
+  Lock,
+  Sparkles,
+  Wand2,
+  MapPin,
+  Instagram,
+  KeyRound
 } from 'lucide-react';
 import { AntiqueItem, Dealer, NegotiationOffer, NegotiationMessage } from '../types';
 import { formatCurrency, generateDealerToBuyerWhatsAppUrl } from '../utils/whatsapp';
@@ -41,7 +46,9 @@ interface DealerDashboardProps {
   onViewItemDetails: (item: AntiqueItem) => void;
   onUpdateOffer: (offer: NegotiationOffer) => void;
   onUpdateDealer: (dealer: Dealer) => void;
+  onDeleteDealer?: (dealerId: string) => void;
   authenticatedDealer?: Dealer | null;
+  isAdmin?: boolean;
   onLogout?: () => void;
   onOpenLoginModal?: () => void;
 }
@@ -59,13 +66,16 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
   onViewItemDetails,
   onUpdateOffer,
   onUpdateDealer,
+  onDeleteDealer,
   authenticatedDealer,
+  isAdmin = false,
   onLogout,
   onOpenLoginModal,
 }) => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'offers' | 'profile'>('inventory');
   const [inventorySearch, setInventorySearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showDeleteDealerModal, setShowDeleteDealerModal] = useState(false);
   
   // Negotiation reply state
   const [activeReplyOfferId, setActiveReplyOfferId] = useState<string | null>(null);
@@ -82,6 +92,7 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
   const [dealerAvatar, setDealerAvatar] = useState(activeDealer.avatar);
   const [dealerPin, setDealerPin] = useState(activeDealer.accessPin || '1234');
   const [dealerEmail, setDealerEmail] = useState(activeDealer.email || '');
+  const [dealerInstagram, setDealerInstagram] = useState(activeDealer.instagram || '');
   const [profileSavedNotice, setProfileSavedNotice] = useState(false);
 
   useEffect(() => {
@@ -94,6 +105,7 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
     setDealerAvatar(activeDealer.avatar);
     setDealerPin(activeDealer.accessPin || '1234');
     setDealerEmail(activeDealer.email || '');
+    setDealerInstagram(activeDealer.instagram || '');
   }, [activeDealer]);
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,11 +232,40 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
       avatar: dealerAvatar,
       accessPin: dealerPin.trim() || '1234',
       email: dealerEmail.trim(),
+      instagram: dealerInstagram.trim().replace(/^@/, '') || undefined,
     };
     onUpdateDealer(updated);
     setProfileSavedNotice(true);
     setTimeout(() => setProfileSavedNotice(false), 3000);
   };
+
+  // If not authenticated and not admin, block view with private access lock screen
+  if (!authenticatedDealer && !isAdmin) {
+    return (
+      <div className="max-w-md mx-auto my-16 bg-white border border-[#e2d5c2] rounded-2xl p-8 shadow-xl text-center space-y-5 animate-fadeIn">
+        <div className="w-14 h-14 mx-auto bg-amber-500/10 text-amber-700 rounded-full flex items-center justify-center border border-amber-500/20">
+          <Lock className="w-7 h-7" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="font-serif text-2xl font-bold text-stone-900">
+            Área Privada de Gestión
+          </h2>
+          <p className="text-sm text-stone-600 leading-relaxed">
+            El panel de inventario y administración de ventas está reservado para los anticuarios y la dirección de Articuarios.
+          </p>
+        </div>
+        {onOpenLoginModal && (
+          <button
+            onClick={onOpenLoginModal}
+            className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center justify-center space-x-2 cursor-pointer"
+          >
+            <KeyRound className="w-4 h-4 text-amber-400" />
+            <span>Ingresar con PIN o Clave de Acceso</span>
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -246,39 +287,36 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                 <span className="text-[10px] font-semibold uppercase bg-amber-900/50 text-amber-200 border border-amber-700/50 px-2 py-0.5 rounded">
                   Panel de Gestión
                 </span>
+                {isAdmin && (
+                  <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded">
+                    Admin
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-stone-400 mt-0.5">
-                {activeDealer.address}, {activeDealer.city} • WhatsApp: +{activeDealer.whatsapp}
+              <p className="text-xs text-stone-400 mt-0.5 flex flex-wrap items-center gap-1.5">
+                <span>{activeDealer.address}, {activeDealer.city}</span>
+                <span>• WhatsApp: +{activeDealer.whatsapp}</span>
+                {activeDealer.instagram && (
+                  <a
+                    href={`https://instagram.com/${activeDealer.instagram.replace(/^@/, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 text-amber-300 hover:text-amber-200 transition-colors"
+                  >
+                    <Instagram className="w-3 h-3 text-pink-400" />
+                    <span>@{activeDealer.instagram.replace(/^@/, '')}</span>
+                  </a>
+                )}
               </p>
             </div>
           </div>
 
           {/* Switch dealer dropdown or Authenticated session info */}
           <div className="flex items-center space-x-3 self-start md:self-auto bg-stone-900/90 p-2.5 rounded-lg border border-stone-800">
-            {authenticatedDealer ? (
-              <div className="flex items-center space-x-3">
-                <div className="flex flex-col text-right">
-                  <span className="text-[10px] uppercase font-bold text-amber-400">
-                    Autenticado con PIN
-                  </span>
-                  <span className="text-xs font-semibold text-white">
-                    {authenticatedDealer.name}
-                  </span>
-                </div>
-                {onLogout && (
-                  <button
-                    type="button"
-                    onClick={onLogout}
-                    className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs rounded border border-stone-700 transition-colors"
-                  >
-                    Cerrar Sesión
-                  </button>
-                )}
-              </div>
-            ) : (
-              <>
+            {isAdmin ? (
+              <div className="flex items-center space-x-2">
                 <Building2 className="w-4 h-4 text-amber-400 shrink-0" />
-                <span className="text-xs text-stone-300 hidden sm:inline">Cambiar de Anticuario:</span>
+                <span className="text-xs text-amber-400/90 font-medium hidden sm:inline">Supervisar Galería:</span>
                 <select
                   id="dealer-switcher-select"
                   value={activeDealer.id}
@@ -293,7 +331,7 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                       setDealerTagline(found.tagline);
                     }
                   }}
-                  className="bg-stone-800 text-stone-100 text-xs py-1.5 px-2.5 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="bg-stone-800 text-stone-100 text-xs py-1.5 px-2.5 rounded border border-stone-700 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
                 >
                   {dealers.map((d) => (
                     <option key={d.id} value={d.id}>
@@ -301,8 +339,37 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                     </option>
                   ))}
                 </select>
-              </>
-            )}
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="ml-2 px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs rounded border border-stone-700 transition-colors cursor-pointer"
+                  >
+                    Salir
+                  </button>
+                )}
+              </div>
+            ) : authenticatedDealer ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex flex-col text-right">
+                  <span className="text-[10px] uppercase font-bold text-amber-400">
+                    Galería Autenticada
+                  </span>
+                  <span className="text-xs font-semibold text-white">
+                    {authenticatedDealer.name}
+                  </span>
+                </div>
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={onLogout}
+                    className="px-2.5 py-1 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs rounded border border-stone-700 transition-colors cursor-pointer"
+                  >
+                    Cerrar Sesión
+                  </button>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -434,6 +501,37 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
             </div>
           </div>
 
+          {/* Módulo Pro: Peritaje Asistido por IA & Estudio Digital */}
+          <div className="bg-gradient-to-r from-[#1c1917] via-[#2a241e] to-[#1c1917] border border-amber-800/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-stone-200 shadow-md">
+            <div className="flex items-start sm:items-center space-x-3">
+              <div className="w-9 h-9 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-300 shrink-0 mt-0.5 sm:mt-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-serif font-bold text-amber-100 text-sm">
+                    Módulo Pro: Peritaje Asistido & Retoque Fotográfico
+                  </span>
+                  <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.2 rounded-full font-bold uppercase tracking-wider">
+                    Gemini Multimodal
+                  </span>
+                </div>
+                <p className="text-xs text-stone-300 mt-0.5">
+                  Toma la fotografía de cualquier antigüedad de tu galería. Nuestro modelo pericial redacta la ficha técnica, tasa el valor estimado y retoca la iluminación al estándar 1stdibs en segundos.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onOpenNewItemModal}
+              className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white rounded-lg text-xs font-bold flex items-center space-x-2 shadow-sm transition-all shrink-0 cursor-pointer"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              <span>Catalogar Pieza con IA</span>
+            </button>
+          </div>
+
           {/* Controls row */}
           <div className="bg-white border border-[#e5ddd1] rounded-xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center space-x-2 flex-1 max-w-md">
@@ -515,9 +613,18 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                               >
                                 {item.title}
                               </h4>
-                              <span className="text-[11px] text-stone-500 block truncate">
-                                {item.origin}
-                              </span>
+                              <div className="flex items-center space-x-2 text-[11px] text-stone-500">
+                                <span className="truncate">{item.origin}</span>
+                                {item.location && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="inline-flex items-center space-x-0.5 text-amber-900 font-medium bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60">
+                                      <MapPin className="w-2.5 h-2.5 text-amber-700" />
+                                      <span>{item.location}</span>
+                                    </span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -884,6 +991,24 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                   className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-xs text-stone-900"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  Usuario de Instagram (ej: allafoglia)
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs text-stone-500 font-mono">
+                    @
+                  </span>
+                  <input
+                    type="text"
+                    value={dealerInstagram.replace(/^@/, '')}
+                    onChange={(e) => setDealerInstagram(e.target.value)}
+                    placeholder="allafoglia"
+                    className="w-full pl-7 pr-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-xs font-mono text-stone-900"
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
@@ -1070,6 +1195,75 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
               </button>
             </div>
           </form>
+
+          {/* Danger Zone: Delete Dealer Profile */}
+          {onDeleteDealer && (
+            <div className="mt-8 pt-6 border-t border-rose-200 bg-rose-50/50 p-5 rounded-xl border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-rose-900 font-serif flex items-center space-x-1.5">
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <span>Eliminar este Anticuario</span>
+                  </h4>
+                  <p className="text-xs text-rose-700 mt-1 max-w-xl">
+                    Si este es un anticuario de muestra o ya no vas a utilizar este espacio, puedes darlo de baja permanentemente. Se eliminarán su perfil y todas sus piezas asociadas.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteDealerModal(true)}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-xs font-semibold transition-colors shadow-2xs shrink-0 flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Eliminar {activeDealer.name}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal Confirmación Eliminar Anticuario Activo */}
+      {showDeleteDealerModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-stone-200 space-y-4 animate-fadeIn">
+            <div className="flex items-start space-x-3">
+              <div className="p-2.5 bg-rose-100 text-rose-700 rounded-full shrink-0">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-stone-900 font-serif">
+                  ¿Confirmar eliminación de {activeDealer.name}?
+                </h3>
+                <p className="text-xs text-stone-600 mt-1.5 leading-relaxed">
+                  Esta acción eliminará de forma irreversible el perfil de <strong>{activeDealer.name}</strong> y todas las piezas vinculadas a este anticuario.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-3 border-t border-stone-200">
+              <button
+                type="button"
+                onClick={() => setShowDeleteDealerModal(false)}
+                className="px-4 py-2 border border-stone-300 text-stone-700 rounded-md text-xs font-semibold hover:bg-stone-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteDealer) {
+                    onDeleteDealer(activeDealer.id);
+                  }
+                  setShowDeleteDealerModal(false);
+                }}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-md text-xs font-semibold transition-colors flex items-center space-x-1.5 shadow-xs"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Sí, Eliminar Definitivamente</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

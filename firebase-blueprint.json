@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "AntiqueItem": {
+      "title": "AntiqueItem",
+      "description": "An antique catalog item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "price": { "type": "number" },
+        "dealerId": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "price", "dealerId"]
+    },
+    "Dealer": {
+      "title": "Dealer",
+      "description": "An antique dealer or gallery profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
+    "NegotiationOffer": {
+      "title": "NegotiationOffer",
+      "description": "A negotiation offer on an item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "itemId": { "type": "string" },
+        "offeredPrice": { "type": "number" }
+      },
+      "required": ["id", "itemId", "offeredPrice"]
+    },
+    "SystemMeta": {
+      "title": "SystemMeta",
+      "description": "System metadata and seed flags",
+      "type": "object",
+      "properties": {
+        "seeded": { "type": "boolean" },
+        "timestamp": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/antique_items/{itemId}": {
+      "schema": "AntiqueItem",
+      "description": "Catalog of antique items and collectibles"
+    },
+    "/dealers/{dealerId}": {
+      "schema": "Dealer",
+      "description": "Dealer profiles and contact details"
+    },
+    "/negotiation_offers/{offerId}": {
+      "schema": "NegotiationOffer",
+      "description": "Offers and counter-proposals on items"
+    },
+    "/system_meta/{metaId}": {
+      "schema": "SystemMeta",
+      "description": "System state flags like catalog seed initialization"
+    }
+  }
+}

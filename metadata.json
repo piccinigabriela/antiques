@@ -1,6 +1,6 @@
 {
   "name": "Catálogo y Mercado de Anticuarios",
-  "description": "Plataforma y catálogo de alta antigüedad con peritaje colegiado, gestión de inventario multi-vendedor, negociación de ofertas y cierre por WhatsApp.",
+  "description": "Articuarios: Plataforma y catálogo de alta antigüedad, arte y piezas históricas con peritaje colegiado, catalogación con IA y gestión multi-vendedor.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

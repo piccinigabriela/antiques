@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Background with warm antique ivory tint -->
+  <rect width="500" height="500" fill="#faf8f5" rx="32"/>
+  
+  <!-- Subtle inner border line (high-end cartouche) -->
+  <rect x="24" y="24" width="452" height="452" fill="none" stroke="#e7e0d6" stroke-width="2" rx="20"/>
+  <rect x="32" y="32" width="436" height="436" fill="none" stroke="#262320" stroke-opacity="0.08" stroke-width="1" rx="14"/>
+
+  <!-- Corner accent marks (antiquarian touch, clean & minimal) -->
+  <line x1="48" y1="48" x2="68" y2="48" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="48" y1="48" x2="48" y2="68" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="452" y1="48" x2="432" y2="48" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="452" y1="48" x2="452" y2="68" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="48" y1="452" x2="68" y2="452" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="48" y1="452" x2="48" y2="432" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="452" y1="452" x2="432" y2="452" stroke="#a89a87" stroke-width="1.5"/>
+  <line x1="452" y1="452" x2="452" y2="432" stroke="#a89a87" stroke-width="1.5"/>
+
+  <!-- Monogram A: Clean, restrained transitional serif (non-voluptuous, dignified, sharp) -->
+  <g transform="translate(0, 0)">
+    <!-- Main Letter A Path with precise serif geometry -->
+    <path d="
+      M 250,96 
+      L 242,96 
+      C 236,96 230,98 226,108 
+      L 128,368 
+      C 124,378 120,384 108,386 
+      L 98,388 
+      L 98,396 
+      L 178,396 
+      L 178,388 
+      L 168,386 
+      C 156,384 152,378 156,366 
+      L 182,296 
+      L 316,296 
+      L 342,366 
+      C 346,378 342,384 330,386 
+      L 320,388 
+      L 320,396 
+      L 404,396 
+      L 404,388 
+      L 394,386 
+      C 382,384 378,378 372,364 
+      L 274,108 
+      C 270,98 264,96 258,96 
+      Z
+      M 249,152 
+      L 302,282 
+      L 196,282 
+      Z
+    " fill="#1c1917" fill-rule="evenodd"/>
+
+    <!-- Subtle jewel / star antique accent above or at crossbar -->
+    <circle cx="250" cy="282" r="3.5" fill="#c29b62"/>
+  </g>
+</svg>

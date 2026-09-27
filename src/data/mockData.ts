@@ -2,6 +2,25 @@ import { AntiqueItem, Dealer, NegotiationOffer } from '../types';
 
 export const INITIAL_DEALERS: Dealer[] = [
   {
+    id: 'dealer-alla-foglia',
+    name: 'Alla Foglia',
+    slug: 'alla-foglia',
+    tagline: 'Maestría en dorado a la hoja, marcos de alta época y diálogo con el interiorismo contemporáneo',
+    description: 'Atelier de dorado al agua sobre bol de Armenia, bruñido con piedra de ágata y rescate de marcos y espejos de época. Galería curada de piezas históricas singulares integradas a la arquitectura moderna.',
+    city: 'Buenos Aires, Argentina',
+    address: 'Atelier & Galería Privada (Citas y Consultas)',
+    phone: '+54 9 11 4822 9310',
+    whatsapp: '5491148229310',
+    instagram: 'allafoglia',
+    avatar: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=200&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1200&auto=format&fit=crop&q=80',
+    foundedYear: 2004,
+    specialties: ['Dorado a la Hoja', 'Marcos Barrocos y Espejos', 'Bol de Armenia & Bruñido', 'Restauración de Marcos', 'Diálogo Contemporáneo'],
+    verified: true,
+    accessPin: '1234',
+    email: 'contacto@allafoglia.com',
+  },
+  {
     id: 'dealer-casa-intaglieta',
     name: 'Casa Intaglieta',
     slug: 'casa-intaglieta',
@@ -77,6 +96,44 @@ export const INITIAL_DEALERS: Dealer[] = [
 
 export const INITIAL_ITEMS: AntiqueItem[] = [
   {
+    id: 'item-alla-foglia-1',
+    sku: 'FOGLIA-01',
+    title: 'Gran Espejo de Salón Barroco con Querubín Esculpido y Peana con Gavetas, Dorado al Agua con Pan de Oro Fino',
+    category: 'Muebles',
+    price: 4800,
+    currency: 'USD',
+    period: 'Siglo XVIII (ca. 1740) / Escuela Italiana',
+    origin: 'Italia (Bolonia / Venecia)',
+    style: 'Barroco Clásico',
+    materials: ['Madera noble tallada a gubia', 'Dorado al agua sobre bol de Armenia', 'Bruñido a piedra de ágata', 'Luna de cristal azogado original biselado', 'Peana inferior con doble gaveta'],
+    dimensions: {
+      height: 128,
+      width: 78,
+      depth: 18,
+      unit: 'cm',
+      weight: '16 kg',
+    },
+    condition: 'Excelente (sin restauraciones)',
+    conditionDetails: 'Extraordinaria preservación del dorado a la hoja antiguo sin repintes modernos. Talla profunda con volutas, hojas de acanto y coronación con querubín alado. Peana original con dos gavetas funcionales.',
+    certificate: {
+      hasCertificate: true,
+      issuer: 'Taller Alla Foglia • Peritaje y Restauración',
+      certificateNumber: 'FOGLIA-CERT-2024-01',
+      yearCertified: '2024',
+      appraiserName: 'Maestría en Conservación de Pan de Oro',
+    },
+    description: 'Pieza representativa del espíritu Articuario: la sublime convivencia entre la opulencia escultórica del siglo XVIII y la serenidad de la arquitectura contemporánea. Su copete coronado por un rostro alado, el movimiento sinuoso de los acantos calados y la pátina cálida del pan de oro sobre bol rojizo crean un punto focal insustituible sobre muros neutros o consolas modernas.',
+    images: [
+      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=1000&auto=format&fit=crop&q=80',
+    ],
+    status: 'available',
+    dealerId: 'dealer-alla-foglia',
+    location: 'Buenos Aires (Atelier Alla Foglia)',
+    featured: true,
+    createdAt: '2026-09-17T08:00:00Z',
+  },
+  {
     id: 'item-int-1',
     sku: 'INT-101',
     title: 'Gran Mesa de Comedor de Banquete Estilo Renacimiento en Roble Macizo Tallado con 10 Sillas Tapizadas',
@@ -110,6 +167,7 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     ],
     status: 'available',
     dealerId: 'dealer-casa-intaglieta',
+    location: 'San Fernando (Prov. Bs. As.)',
     featured: true,
     createdAt: '2026-09-13T09:00:00Z',
   },
@@ -147,6 +205,7 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     ],
     status: 'available',
     dealerId: 'dealer-casa-intaglieta',
+    location: 'San Fernando (Prov. Bs. As.)',
     featured: true,
     createdAt: '2026-09-13T09:30:00Z',
   },
@@ -184,6 +243,7 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     ],
     status: 'available',
     dealerId: 'dealer-casa-intaglieta',
+    location: 'San Fernando (Prov. Bs. As.)',
     featured: true,
     createdAt: '2026-09-13T10:00:00Z',
   },
@@ -221,6 +281,7 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     ],
     status: 'available',
     dealerId: 'dealer-casa-intaglieta',
+    location: 'San Fernando (Prov. Bs. As.)',
     featured: true,
     createdAt: '2026-09-13T10:30:00Z',
   },
@@ -296,6 +357,7 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     ],
     status: 'available',
     dealerId: 'dealer-san-telmo',
+    location: 'CABA (San Telmo)',
     featured: false,
     createdAt: '2026-08-15T10:00:00Z',
   },
@@ -333,6 +395,7 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     ],
     status: 'in_negotiation',
     dealerId: 'dealer-desvan-imperial',
+    location: 'Tigre (Prov. Bs. As.)',
     featured: false,
     createdAt: '2026-08-20T14:30:00Z',
   },
@@ -442,6 +505,80 @@ export const INITIAL_ITEMS: AntiqueItem[] = [
     dealerId: 'dealer-desvan-imperial',
     featured: true,
     createdAt: '2026-09-10T10:00:00Z',
+  },
+  {
+    id: 'item-book-1',
+    sku: 'LIB-301',
+    title: 'Don Quijote de la Mancha (Edición Monumental de Lujo ilustrada por Gustave Doré, 2 Tomos)',
+    category: 'Libros y Manuscritos',
+    price: 1850,
+    currency: 'USD',
+    period: 'Siglo XIX (ca. 1880)',
+    origin: 'Barcelona, España / Biblioteca Particular San Telmo',
+    style: 'Encuadernación Romántica / Clásica',
+    materials: ['Papel de hilo satinado', 'Encuadernación en media piel de zapa con nervios y hierros dorados', 'Cortes tintados'],
+    dimensions: {
+      height: 38,
+      width: 29,
+      depth: 14,
+      unit: 'cm',
+      weight: '9 kg (ambos tomos)',
+    },
+    condition: 'Excelente (sin restauraciones)',
+    conditionDetails: 'Ejemplar en impecable estado de conservación, sin picaduras ni manchas de humedad ácida. Incluye la totalidad de las láminas a toda página al aguafuerte de Gustave Doré.',
+    certificate: {
+      hasCertificate: true,
+      issuer: 'Sociedad Iberoamericana de Bibliofilia y Manuscritos',
+      certificateNumber: 'BIB-1880-DQ-02',
+      yearCertified: '2023',
+      appraiserName: 'Prof. Gonzalo de la Serna',
+    },
+    description: 'Magna edición en folio mayor de la obra cumbre de Cervantes. Contiene las célebres 120 ilustraciones xilográficas y 257 viñetas de Gustave Doré grabadas por H. Pisan. Una de las piezas bibliofílicas más deseadas por coleccionistas de letras.',
+    images: [
+      'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=800&auto=format&fit=crop&q=80',
+    ],
+    status: 'available',
+    dealerId: 'dealer-san-telmo',
+    featured: true,
+    createdAt: '2026-09-15T11:00:00Z',
+  },
+  {
+    id: 'item-book-2',
+    sku: 'LIB-302',
+    title: 'L’Encyclopédie de Diderot et d’Alembert: Recueil de Planches sur les Sciences et les Arts (Tomo III Original)',
+    category: 'Libros y Manuscritos',
+    price: 3400,
+    currency: 'USD',
+    period: 'Siglo XVIII (ca. 1765)',
+    origin: 'París, Francia',
+    style: 'Ilustración Francesa / Siglo de las Luces',
+    materials: ['Papel verjurado con marcas de agua de molino', 'Encuadernación en tafilete de época con lomo en piel de becerro'],
+    dimensions: {
+      height: 42,
+      width: 28,
+      depth: 6,
+      unit: 'cm',
+      weight: '4.5 kg',
+    },
+    condition: 'Muy bueno (pátina original de época)',
+    conditionDetails: 'Encuadernación de época original con escudos dorados en el lomo. Todos los grabados desplegables sobre botánica, relojería, ebanistería y astronomía en excelente estado.',
+    certificate: {
+      hasCertificate: true,
+      issuer: 'Asociación Internacional de Libreros Anticuarios (ILAB)',
+      certificateNumber: 'ILAB-FR-1765-DID',
+      yearCertified: '2022',
+      appraiserName: 'Étienne Laurent',
+    },
+    description: 'Volumen original de gran formato de la célebre Enciclopedia Francesa que cambió el pensamiento universal. Incluye más de 200 grabados calcográficos en cobre minuciosamente detallados sobre artes mecánicas, arquitectura y diseño de mobiliario del siglo XVIII.',
+    images: [
+      'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&auto=format&fit=crop&q=80',
+    ],
+    status: 'available',
+    dealerId: 'dealer-casa-intaglieta',
+    featured: true,
+    createdAt: '2026-09-15T12:00:00Z',
   }
 ];
 
@@ -484,25 +621,45 @@ export const INITIAL_OFFERS: NegotiationOffer[] = [
 ];
 
 // Local storage keys
-const STORAGE_ITEMS_KEY = 'anticuario_items_v2';
-const STORAGE_DEALERS_KEY = 'anticuario_dealers_v2';
-const STORAGE_OFFERS_KEY = 'anticuario_offers_v2';
+const STORAGE_ITEMS_KEY = 'anticuario_items_v3';
+const STORAGE_DEALERS_KEY = 'anticuario_dealers_v3';
+const STORAGE_OFFERS_KEY = 'anticuario_offers_v3';
+const STORAGE_INIT_KEY = 'anticuario_catalog_initialized_v3';
+
+export const SAMPLE_ITEM_IDS = INITIAL_ITEMS.map((it) => it.id);
 
 export function getStoredItems(): AntiqueItem[] {
   try {
     const raw = localStorage.getItem(STORAGE_ITEMS_KEY);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Ensure Casa Intaglieta items are present
-        const hasIntaglieta = parsed.some((it: AntiqueItem) => it.dealerId === 'dealer-casa-intaglieta');
-        if (hasIntaglieta) {
-          return parsed;
+      if (Array.isArray(parsed)) {
+        // Ensure Alla Foglia's mirror piece is included
+        const hasAllaFoglia = parsed.some((it) => it.id === 'item-alla-foglia-1');
+        if (!hasAllaFoglia && INITIAL_ITEMS.some((it) => it.id === 'item-alla-foglia-1')) {
+          const fogliaItem = INITIAL_ITEMS.find((it) => it.id === 'item-alla-foglia-1')!;
+          return [fogliaItem, ...parsed];
         }
+        return parsed;
+      }
+    }
+
+    const isInitialized = localStorage.getItem(STORAGE_INIT_KEY);
+    if (isInitialized === 'true') {
+      return [];
+    }
+
+    // Try migration from v2 if available
+    const rawV2 = localStorage.getItem('anticuario_items_v2');
+    if (rawV2 !== null) {
+      const parsedV2 = JSON.parse(rawV2);
+      if (Array.isArray(parsedV2)) {
+        saveStoredItems(parsedV2);
+        return parsedV2;
       }
     }
   } catch (e) {
-    console.warn('Failed to load items from storage, fallback to initial', e);
+    console.warn('Failed to load items from storage', e);
   }
   return INITIAL_ITEMS;
 }
@@ -510,10 +667,18 @@ export function getStoredItems(): AntiqueItem[] {
 export function saveStoredItems(items: AntiqueItem[]): void {
   try {
     localStorage.setItem(STORAGE_ITEMS_KEY, JSON.stringify(items));
+    localStorage.setItem(STORAGE_INIT_KEY, 'true');
   } catch (e) {
     console.warn('Failed to save items to storage', e);
   }
 }
+
+export const SAMPLE_DEALER_IDS = [
+  'dealer-casa-intaglieta',
+  'dealer-san-telmo',
+  'dealer-deco-recoleta',
+  'dealer-desvan-imperial',
+];
 
 export function getStoredDealers(): Dealer[] {
   try {
@@ -521,18 +686,48 @@ export function getStoredDealers(): Dealer[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const hasIntaglieta = parsed.some((d: Dealer) => d.id === 'dealer-casa-intaglieta');
-        if (hasIntaglieta) {
-          // Ensure each dealer has accessPin and email even if saved before this feature
-          return parsed.map((d: Dealer) => {
-            const initial = INITIAL_DEALERS.find((init) => init.id === d.id);
-            return {
-              ...d,
-              accessPin: d.accessPin || initial?.accessPin || '1234',
-              email: d.email || initial?.email || `${d.slug || 'anticuario'}@galeria.com`,
-            };
-          });
+        // Filter out duplicate workshop profile if user's real Allafoglia profile exists
+        const cleaned = parsed.filter((d: Dealer) => {
+          // If a dealer is literally named with "Taller de Dorado" and there's another Alla Foglia profile, drop the workshop
+          const isWorkshopNamed = d.name.toLowerCase().includes('taller de dorado');
+          const hasAnotherFoglia = parsed.some(
+            (other: Dealer) =>
+              other.id !== d.id &&
+              (other.name.toLowerCase().includes('allafoglia') ||
+                other.name.toLowerCase().includes('alla foglia') ||
+                other.slug?.toLowerCase().includes('alla-foglia'))
+          );
+          if (isWorkshopNamed && hasAnotherFoglia) {
+            return false;
+          }
+          return true;
+        });
+
+        // Ensure each dealer has accessPin, email and instagram
+        const updated = cleaned.map((d: Dealer) => {
+          const initial = INITIAL_DEALERS.find((init) => init.id === d.id);
+          return {
+            ...d,
+            accessPin: d.accessPin || initial?.accessPin || '1234',
+            email: d.email || initial?.email || `${d.slug || 'anticuario'}@galeria.com`,
+            instagram: d.instagram || initial?.instagram,
+          };
+        });
+
+        // Ensure at least Alla Foglia exists once
+        const hasFoglia = updated.some(
+          (d) =>
+            d.id === 'dealer-alla-foglia' ||
+            d.name.toLowerCase().includes('allafoglia') ||
+            d.name.toLowerCase().includes('alla foglia')
+        );
+        if (!hasFoglia) {
+          const allaFoglia = INITIAL_DEALERS.find((d) => d.id === 'dealer-alla-foglia');
+          if (allaFoglia) {
+            return [allaFoglia, ...updated];
+          }
         }
+        return updated;
       }
     }
   } catch (e) {

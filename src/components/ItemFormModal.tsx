@@ -1,6 +1,28 @@
 import React, { useState } from 'react';
-import { X, Award, Save, Image as ImageIcon, Upload, Building2 } from 'lucide-react';
+import { 
+  X, 
+  Award, 
+  Save, 
+  Image as ImageIcon, 
+  Upload, 
+  Building2, 
+  Sparkles, 
+  Wand2, 
+  Loader2, 
+  CheckCircle2, 
+  Sliders, 
+  AlertCircle,
+  HelpCircle,
+  Lightbulb,
+  MapPin,
+  BookOpen,
+  Trash2,
+  Star,
+  Plus,
+  Layers
+} from 'lucide-react';
 import { AntiqueItem, CategoryType, ConservationState, Dealer } from '../types';
+import { PhotoStudioModal } from './PhotoStudioModal';
 
 interface ItemFormModalProps {
   initialItem?: AntiqueItem | null;
@@ -18,6 +40,7 @@ const CATEGORIES: CategoryType[] = [
   'Iluminación',
   'Cerámica y Porcelana',
   'Esculturas y Bronces',
+  'Libros y Manuscritos',
   'Objetos de Colección',
 ];
 
@@ -58,6 +81,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
   const [currency] = useState<'USD' | 'EUR'>(initialItem?.currency || 'USD');
   const [period, setPeriod] = useState(initialItem?.period || 'Siglo XIX (ca. 1880)');
   const [origin, setOrigin] = useState(initialItem?.origin || 'Francia (París)');
+  const [location, setLocation] = useState(initialItem?.location || activeDealer.city.split(',')[0] || 'CABA (Buenos Aires)');
   const [style, setStyle] = useState(initialItem?.style || 'Neoclásico / Rococó');
   const [materialsStr, setMaterialsStr] = useState(
     initialItem ? initialItem.materials.join(', ') : 'Caoba maciza, Bronce cincelado, Mármol'
@@ -84,22 +108,191 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
     initialItem?.description ||
       'Excelente pieza de colección con rica historia documental. Conserva los herrajes y terminaciones originales.'
   );
-  const [imageUrl, setImageUrl] = useState(
-    initialItem?.images[0] || SAMPLE_ANTIQUE_IMAGES[Math.floor(Math.random() * SAMPLE_ANTIQUE_IMAGES.length)]
-  );
+  const [images, setImages] = useState<string[]>(() => {
+    if (initialItem?.images && initialItem.images.length > 0) {
+      return initialItem.images;
+    }
+    return [SAMPLE_ANTIQUE_IMAGES[Math.floor(Math.random() * SAMPLE_ANTIQUE_IMAGES.length)]];
+  });
+  const [targetStudioIndex, setTargetStudioIndex] = useState<number>(0);
+  const [urlInput, setUrlInput] = useState<string>('');
   const [status, setStatus] = useState<AntiqueItem['status']>(initialItem?.status || 'available');
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  // AI Cataloging & Photo Studio State
+  const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+  const [aiLoadingMessage, setAiLoadingMessage] = useState('Examinando ensamble y estilo artístico...');
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiReport, setAiReport] = useState<{
+    authenticityMarkers: string[];
+    photoTips?: string;
+  } | null>(null);
+  const [showPhotoStudio, setShowPhotoStudio] = useState(false);
+
+  const handleAutoCatalogWithAI = async (overrideImages?: string[]) => {
+    const targetImages = overrideImages || images;
+    if (!targetImages || targetImages.length === 0) {
+      setAiError('Por favor sube o selecciona al menos una fotografía antes de iniciar la catalogación.');
+      return;
+    }
+
+    setAiError(null);
+    setIsAnalyzingAI(true);
+    
+    const isBook = category === 'Libros y Manuscritos';
+    setAiLoadingMessage(
+      isBook 
+        ? `Analizando portada interior, colofón y encuadernación (${targetImages.length} fotos)...` 
+        : `Escaneando proporciones, ensambles y estilo artístico (${targetImages.length} fotos)...`
+    );
+
+    const timer1 = setTimeout(() => {
+      setAiLoadingMessage(
+        isBook
+          ? 'Identificando autor, título formal, editorial, fecha de impresión y técnicas gráficas...'
+          : 'Determinando época histórica, estilo arquitectónico y escuela de origen...'
+      );
+    }, 1400);
+
+    const timer2 = setTimeout(() => {
+      setAiLoadingMessage('Redactando ficha técnica curatorial y estimación de mercado...');
+    }, 2800);
+
+    try {
+      let res = await fetch('/api/ai/analyze-antique', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          images: targetImages,
+        }),
+      });
+
+      // If momentary high load, do an immediate silent retry with the server's contingency path
+      if (!res.ok && res.status >= 500) {
+        setAiLoadingMessage('Ruta alternativa activada: reintentando análisis pericial...');
+        await new Promise((r) => setTimeout(r, 1200));
+        res = await fetch('/api/ai/analyze-antique', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            images: targetImages,
+          }),
+        });
+      }
+
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'No se pudo completar el análisis pericial.');
+      }
+
+      const data = json.data;
+      if (data.title) setTitle(data.title);
+      if (data.category && CATEGORIES.includes(data.category)) setCategory(data.category);
+      if (data.period) setPeriod(data.period);
+      if (data.origin) setOrigin(data.origin);
+      if (data.style) setStyle(data.style);
+      if (Array.isArray(data.materials)) setMaterialsStr(data.materials.join(', '));
+      if (data.estimatedDimensions) {
+        if (data.estimatedDimensions.height) setHeight(data.estimatedDimensions.height);
+        if (data.estimatedDimensions.width) setWidth(data.estimatedDimensions.width);
+        if (data.estimatedDimensions.depth) setDepth(data.estimatedDimensions.depth);
+        if (data.estimatedDimensions.weight) setWeight(data.estimatedDimensions.weight);
+      }
+      if (data.condition && CONSERVATION_STATES.includes(data.condition)) {
+        setCondition(data.condition);
+      }
+      if (data.conditionDetails) setConditionDetails(data.conditionDetails);
+      if (data.description) setDescription(data.description);
+      if (data.estimatedValueUSD && typeof data.estimatedValueUSD === 'number') {
+        setPrice(data.estimatedValueUSD);
+      }
+
+      setAiReport({
+        authenticityMarkers: data.authenticityMarkers || [],
+        photoTips: data.photoTips,
+      });
+    } catch (err: any) {
+      console.error('Error in AI analysis:', err);
+      let msg = err.message || 'Error de conexión con el servicio pericial de IA.';
+      if (msg.includes('503') || msg.includes('high demand') || msg.includes('UNAVAILABLE')) {
+        msg = 'Alta demanda momentánea en la red de IA. Hemos activado la ruta de contingencia; por favor pulsa nuevamente en «Catalogar con Foto (IA)».';
+      }
+      setAiError(msg);
+    } finally {
+      setIsAnalyzingAI(false);
+    }
+  };
+
+  const handleMultipleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file: File) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         if (typeof reader.result === 'string') {
-          setImageUrl(reader.result);
+          const rawDataUrl = reader.result;
+          // Optimize/compress image client-side to ensure instant transfer, reliable Firestore persistence and AI compatibility
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDimension = 1000; // Optimal resolution for web display and under 300KB for Firestore
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDimension || h > maxDimension) {
+              if (w > h) {
+                h = Math.round((h * maxDimension) / w);
+                w = maxDimension;
+              } else {
+                w = Math.round((w * maxDimension) / h);
+                h = maxDimension;
+              }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, w, h);
+              const compressed = canvas.toDataURL('image/jpeg', 0.82);
+              setImages((prev) => [...prev, compressed]);
+            } else {
+              setImages((prev) => [...prev, rawDataUrl]);
+            }
+          };
+          img.onerror = () => {
+            setImages((prev) => [...prev, rawDataUrl]);
+          };
+          img.src = rawDataUrl;
         }
       };
       reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const handleAddUrlImage = () => {
+    if (urlInput.trim()) {
+      setImages((prev) => [...prev, urlInput.trim()]);
+      setUrlInput('');
     }
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleSetPrimaryImage = (indexToPrimary: number) => {
+    setImages((prev) => {
+      const selected = prev[indexToPrimary];
+      const rest = prev.filter((_, idx) => idx !== indexToPrimary);
+      return [selected, ...rest];
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -138,9 +331,10 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
         yearCertified: hasCertificate ? new Date().getFullYear().toString() : undefined,
       },
       description,
-      images: [imageUrl],
+      images: images.length > 0 ? images : [SAMPLE_ANTIQUE_IMAGES[0]],
       status,
       dealerId: selectedDealerId || activeDealer.id,
+      location: location.trim() || undefined,
       featured: initialItem?.featured || false,
       createdAt: initialItem?.createdAt || new Date().toISOString(),
     };
@@ -175,6 +369,109 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
 
         {/* Scrollable Form */}
         <form onSubmit={handleSubmit} className="overflow-y-auto p-6 space-y-6 flex-1">
+          {/* VIP Module: Peritaje Asistido por IA & Estudio Digital */}
+          <div className="bg-gradient-to-r from-[#211d18] via-[#2d2720] to-[#1c1917] rounded-xl p-5 text-stone-100 border border-amber-900/40 shadow-lg relative overflow-hidden">
+            {/* Background luxury accent */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5 max-w-xl">
+                <div className="flex items-center space-x-2">
+                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center space-x-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Módulo Pro Anticuarios</span>
+                  </span>
+                  <span className="text-[11px] text-stone-400">
+                    Gemini Vision Multimodal • Soporte Multifoto
+                  </span>
+                </div>
+                <h3 className="font-serif text-lg font-bold text-amber-100">
+                  Catalogación Pericial con IA & Estudio de Fotografía
+                </h3>
+                <p className="text-xs text-stone-300 leading-relaxed">
+                  Sube una o varias fotos (para libros: tapa, portada interior y colofón; para muebles: ensamble y sellos). La IA cruzará todas las imágenes para redactar la ficha técnica y datación en 3 segundos.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  disabled={isAnalyzingAI || images.length === 0}
+                  onClick={() => handleAutoCatalogWithAI()}
+                  className="px-4 py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+                >
+                  {isAnalyzingAI ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-200" />
+                      <span>Analizando ({images.length} fotos)...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 text-amber-200" />
+                      <span>⚡ Catalogar con Fotos (IA) {images.length > 0 && `(${images.length})`}</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTargetStudioIndex(0);
+                    setShowPhotoStudio(true);
+                  }}
+                  className="px-3.5 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold rounded-lg border border-stone-700 transition-all flex items-center space-x-2 cursor-pointer"
+                >
+                  <Sliders className="w-4 h-4 text-amber-400" />
+                  <span>🎨 Retoque 1stdibs</span>
+                </button>
+              </div>
+            </div>
+
+            {/* In-progress loading banner */}
+            {isAnalyzingAI && (
+              <div className="mt-4 pt-3 border-t border-stone-800/80 flex items-center space-x-3 text-xs text-amber-300 animate-pulse">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{aiLoadingMessage}</span>
+              </div>
+            )}
+
+            {/* Error banner if any */}
+            {aiError && (
+              <div className="mt-3 pt-3 border-t border-red-900/40 text-xs text-red-300 flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{aiError}</span>
+              </div>
+            )}
+
+            {/* AI Report Card when completed */}
+            {aiReport && (
+              <div className="mt-4 pt-3 border-t border-amber-900/40 bg-amber-950/30 rounded-lg p-3.5 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-amber-300 font-semibold">
+                  <div className="flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span>Ficha Catalogada Exitosamente • Señas de Autenticidad Detectadas:</span>
+                  </div>
+                  <span className="text-[10px] text-stone-400 uppercase tracking-wider">Peritaje Asistido</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-stone-300">
+                  {aiReport.authenticityMarkers.map((marker, idx) => (
+                    <div key={idx} className="bg-stone-900/80 border border-stone-800 rounded p-2 text-[11px] flex items-start space-x-1.5">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span>{marker}</span>
+                    </div>
+                  ))}
+                </div>
+                {aiReport.photoTips && (
+                  <div className="text-[11px] text-stone-400 flex items-center space-x-1.5 pt-1">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span><strong>Consejo pericial / fotográfico:</strong> {aiReport.photoTips}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Section 1: Basic Info & Pricing */}
           <div className="bg-white border border-[#e5ddd1] rounded-lg p-5 space-y-4">
             <h3 className="font-serif font-bold text-base text-stone-900 border-b border-stone-200 pb-2">
@@ -337,6 +634,44 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
               </div>
             </div>
 
+            {/* Ubicación de la Pieza (Localización física) */}
+            <div className="bg-[#fbf9f6] border border-[#ded6c9] p-3.5 rounded-md">
+              <label className="block text-xs font-semibold text-stone-800 mb-1 flex items-center justify-between">
+                <span className="flex items-center space-x-1.5">
+                  <MapPin className="w-4 h-4 text-[#b45309]" />
+                  <span>Ubicación Geográfica de la Pieza (Para visitas y fletes) *</span>
+                </span>
+                <span className="text-[11px] text-stone-500 font-normal">
+                  Ej: CABA, San Fernando, Tigre, Mendoza...
+                </span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="Ej: CABA (Capital Federal), San Fernando (Prov. Bs. As.), Tigre, Mendoza..."
+                  className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50 font-medium"
+                />
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                <span className="text-[10px] text-stone-400 self-center mr-1">Sugerencias rápidas:</span>
+                {['CABA (Capital Federal)', 'San Fernando (Prov. Bs. As.)', 'Tigre (Prov. Bs. As.)', 'San Isidro', 'Mendoza', 'Córdoba'].map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setLocation(loc)}
+                    className="text-[11px] px-2 py-0.5 bg-white hover:bg-amber-50 hover:border-amber-300 border border-stone-200 text-stone-700 rounded transition-colors cursor-pointer"
+                  >
+                    {loc}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-stone-500 mt-1.5">
+                * Por seguridad solo se indica la zona o localidad en la ficha. La dirección exacta para visitas se coordina por privado.
+              </p>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-stone-700 mb-1">
                 Materiales y Técnicas de Manufactura (separados por coma)
@@ -493,75 +828,244 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
 
           {/* Section 4: Imagen y Reseña */}
           <div className="bg-white border border-[#e5ddd1] rounded-lg p-5 space-y-4">
-            <h3 className="font-serif font-bold text-base text-stone-900 border-b border-stone-200 pb-2">
-              4. Fotografía y Reseña Histórica
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200 pb-2 gap-2">
+              <div>
+                <h3 className="font-serif font-bold text-base text-stone-900 flex items-center space-x-2">
+                  <span>4. Fotografías de la Pieza (Galería Multifoto) y Reseña</span>
+                </h3>
+                <p className="text-xs text-stone-500">
+                  Sube múltiples fotos para capturar portada, colofón, lomo, grabados o sellos de procedencia.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-full border border-amber-300 flex items-center space-x-1">
+                  <Layers className="w-3.5 h-3.5 text-[#b45309]" />
+                  <span>{images.length} {images.length === 1 ? 'fotografía' : 'fotografías'}</span>
+                </span>
+              </div>
+            </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">
-                Fotografía Principal de la Pieza *
-              </label>
-              
-              <div className="flex flex-col sm:flex-row gap-3 items-start">
-                {/* Thumbnail preview */}
-                {imageUrl && (
-                  <div className="w-24 h-24 rounded-lg overflow-hidden border border-stone-300 shrink-0 bg-stone-100 relative group shadow-2xs">
-                    <img
-                      src={imageUrl}
-                      alt="Vista previa"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] text-center py-0.5">
-                      Vista previa
-                    </span>
+            {/* Specialized Guide for Books & Multi-faceted Antiques */}
+            <div className="bg-amber-50/70 border border-amber-200/80 rounded-lg p-3.5 text-xs text-stone-700 space-y-2">
+              <div className="flex items-start space-x-2">
+                <BookOpen className="w-4 h-4 text-[#b45309] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-stone-900">
+                    ¿Cómo subir las fotos de un Libro Antiguo o Manuscrito para catalogar?
+                  </p>
+                  <p className="text-[11px] text-stone-600 leading-relaxed">
+                    Los datos de un libro están dispersos en distintas partes. Te recomendamos seleccionar y subir juntos:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 pt-1">
+                    <div className="bg-white/90 p-2 rounded border border-amber-200 text-[11px]">
+                      <span className="font-bold text-[#b45309]">1. Tapa y Lomo:</span>
+                      <p className="text-stone-600 mt-0.5">Encuadernación (piel, pergamino, nervios, dorados).</p>
+                    </div>
+                    <div className="bg-white/90 p-2 rounded border border-amber-200 text-[11px]">
+                      <span className="font-bold text-[#b45309]">2. Portada Interior:</span>
+                      <p className="text-stone-600 mt-0.5">Autor, título formal, editorial, imprenta y ciudad.</p>
+                    </div>
+                    <div className="bg-white/90 p-2 rounded border border-amber-200 text-[11px]">
+                      <span className="font-bold text-[#b45309]">3. Colofón final:</span>
+                      <p className="text-stone-600 mt-0.5">Fecha exacta de impresión y ejemplar numerado.</p>
+                    </div>
+                    <div className="bg-white/90 p-2 rounded border border-amber-200 text-[11px]">
+                      <span className="font-bold text-[#b45309]">4. Grabados / Papel:</span>
+                      <p className="text-stone-600 mt-0.5">Láminas, aguafuertes y estado (foxing, barbas).</p>
+                    </div>
                   </div>
-                )}
-
-                <div className="flex-1 w-full space-y-2">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <input
-                      type="text"
-                      required
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="Pegar URL de la imagen o subir archivo..."
-                      className="flex-1 px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-xs text-stone-900 font-mono"
-                    />
-
-                    <label className="px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-md text-xs font-semibold flex items-center justify-center space-x-1.5 cursor-pointer border border-stone-300 transition-colors shrink-0">
-                      <Upload className="w-3.5 h-3.5 text-[#b45309]" />
-                      <span>Subir desde dispositivo</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  {/* Sample antique images picker */}
-                  <div className="flex items-center space-x-2 overflow-x-auto pb-1 pt-1">
-                    <span className="text-[11px] text-stone-500 flex items-center shrink-0">
-                      <ImageIcon className="w-3 h-3 mr-1 text-stone-400" />
-                      O elegir muestra:
-                    </span>
-                    {SAMPLE_ANTIQUE_IMAGES.map((img, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setImageUrl(img)}
-                        className={`w-8 h-8 rounded overflow-hidden border shrink-0 transition-all ${
-                          imageUrl === img ? 'border-[#b45309] ring-2 ring-[#b45309]/30' : 'border-stone-300 hover:border-stone-400'
-                        }`}
-                      >
-                        <img src={img} alt="Sample" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-[11px] text-amber-900/80 italic pt-0.5">
+                    ✨ Gemini Vision cruzará todas las fotografías en simultáneo para redactar la ficha pericial bibliográfica.
+                  </p>
                 </div>
               </div>
+            </div>
+
+            {/* Upload Controls Bar */}
+            <div className="space-y-3 bg-[#faf8f5] p-3.5 rounded-lg border border-stone-200">
+              <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+                {/* Multi file upload button */}
+                <label className="px-4 py-2.5 bg-[#b45309] hover:bg-[#92400e] text-white rounded-md text-xs font-semibold flex items-center justify-center space-x-2 cursor-pointer shadow-xs transition-colors shrink-0">
+                  <Upload className="w-4 h-4" />
+                  <span>Subir fotos (selecciona una o varias)</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleMultipleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+
+                {/* Paste URL input */}
+                <div className="flex-1 flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddUrlImage();
+                      }
+                    }}
+                    placeholder="O pegar URL web de otra imagen..."
+                    className="flex-1 px-3 py-2 bg-white border border-stone-300 rounded-md text-xs text-stone-900 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddUrlImage}
+                    disabled={!urlInput.trim()}
+                    className="px-3 py-2 bg-stone-200 hover:bg-stone-300 disabled:opacity-50 text-stone-800 rounded-md text-xs font-semibold flex items-center space-x-1 shrink-0 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Agregar</span>
+                  </button>
+                </div>
+
+                {/* AI Catalog Button inside section */}
+                <button
+                  type="button"
+                  disabled={isAnalyzingAI || images.length === 0}
+                  onClick={() => handleAutoCatalogWithAI()}
+                  className="px-3.5 py-2.5 bg-amber-100 hover:bg-amber-200 border border-amber-300 text-[#92400e] rounded-md text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors shrink-0 cursor-pointer"
+                >
+                  <Wand2 className="w-3.5 h-3.5" />
+                  <span>Catalogar Todo ({images.length})</span>
+                </button>
+              </div>
+
+              {/* Sample antique images picker */}
+              <div className="flex items-center space-x-2 overflow-x-auto pb-1 pt-1">
+                <span className="text-[11px] text-stone-500 flex items-center shrink-0">
+                  <ImageIcon className="w-3 h-3 mr-1 text-stone-400" />
+                  Muestras de prueba:
+                </span>
+                {SAMPLE_ANTIQUE_IMAGES.map((img, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    title="Añadir fotografía de muestra"
+                    onClick={() => {
+                      setImages((prev) => [...prev, img]);
+                    }}
+                    className="w-9 h-9 rounded overflow-hidden border border-stone-300 hover:border-[#b45309] shrink-0 transition-all hover:scale-105"
+                  >
+                    <img src={img} alt="Sample" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Uploaded Images Gallery Grid */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-stone-600">
+                <span className="font-semibold">
+                  Fotografías cargadas ({images.length}):
+                </span>
+                <span className="text-[11px] text-stone-400">
+                  * La primera foto es la Tapa o Imagen de Portada en la tienda
+                </span>
+              </div>
+
+              {images.length === 0 ? (
+                <div className="p-8 border-2 border-dashed border-stone-300 rounded-lg text-center bg-stone-50/50">
+                  <ImageIcon className="w-8 h-8 text-stone-400 mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-stone-700">No hay fotos cargadas todavía</p>
+                  <p className="text-[11px] text-stone-500 mt-1">
+                    Sube las fotos de tu libro o pieza para que la IA extraiga los datos automáticamente.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {images.map((img, index) => (
+                    <div
+                      key={index}
+                      className={`relative group bg-stone-100 rounded-lg border overflow-hidden transition-all shadow-2xs flex flex-col ${
+                        index === 0 ? 'border-[#b45309] ring-2 ring-[#b45309]/30' : 'border-stone-300 hover:border-stone-400'
+                      }`}
+                    >
+                      {/* Image Preview */}
+                      <div className="relative aspect-4/3 bg-stone-200 overflow-hidden">
+                        <img
+                          src={img}
+                          alt={`Foto ${index + 1}`}
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-cover"
+                        />
+
+                        {/* Top badge */}
+                        <div className="absolute top-1.5 left-1.5">
+                          {index === 0 ? (
+                            <span className="bg-[#b45309] text-white font-bold text-[10px] px-2 py-0.5 rounded shadow flex items-center space-x-1">
+                              <Star className="w-3 h-3 fill-white" />
+                              <span>1. Tapa / Principal</span>
+                            </span>
+                          ) : (
+                            <span className="bg-stone-900/80 text-white text-[10px] px-2 py-0.5 rounded">
+                              Foto #{index + 1}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Quick Retouch on hover */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTargetStudioIndex(index);
+                            setShowPhotoStudio(true);
+                          }}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-semibold cursor-pointer"
+                        >
+                          <Sliders className="w-4 h-4 mb-1 text-amber-300" />
+                          <span>Retocar Iluminación</span>
+                        </button>
+                      </div>
+
+                      {/* Control bar for each photo */}
+                      <div className="p-2 bg-white flex items-center justify-between border-t border-stone-200 text-xs">
+                        {index !== 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryImage(index)}
+                            className="text-[11px] text-[#b45309] hover:text-[#92400e] font-semibold flex items-center space-x-1"
+                            title="Hacer que esta foto sea la portada principal"
+                          >
+                            <Star className="w-3 h-3" />
+                            <span>Principal</span>
+                          </button>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                            Portada
+                          </span>
+                        )}
+
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetStudioIndex(index);
+                              setShowPhotoStudio(true);
+                            }}
+                            className="text-stone-600 hover:text-stone-900 p-1"
+                            title="Retocar en Estudio Digital"
+                          >
+                            <Sliders className="w-3.5 h-3.5 text-stone-500 hover:text-[#b45309]" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(index)}
+                            className="text-stone-400 hover:text-red-600 p-1"
+                            title="Eliminar esta foto"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -598,6 +1102,19 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
             </button>
           </div>
         </form>
+
+        {/* Photo Studio Modal */}
+        {showPhotoStudio && (
+          <PhotoStudioModal
+            initialImageUrl={images[targetStudioIndex] || images[0] || ''}
+            onClose={() => setShowPhotoStudio(false)}
+            onApplyImage={(enhancedUrl) => {
+              setImages((prev) =>
+                prev.map((img, i) => (i === targetStudioIndex ? enhancedUrl : img))
+              );
+            }}
+          />
+        )}
       </div>
     </div>
   );

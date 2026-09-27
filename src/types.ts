@@ -6,6 +6,7 @@ export type CategoryType =
   | 'Iluminación'
   | 'Cerámica y Porcelana'
   | 'Esculturas y Bronces'
+  | 'Libros y Manuscritos'
   | 'Objetos de Colección';
 
 export type ItemStatus = 'available' | 'in_negotiation' | 'reserved' | 'sold';
@@ -51,6 +52,7 @@ export interface AntiqueItem {
   images: string[];
   status: ItemStatus;
   dealerId: string;
+  location?: string; // e.g. "CABA (Capital Federal)", "San Fernando, Prov. Bs. As.", "Tigre", "Mendoza"
   featured?: boolean;
   createdAt: string;
 }
@@ -65,6 +67,7 @@ export interface Dealer {
   address: string;
   phone: string;
   whatsapp: string; // digits only e.g. "5491155551234"
+  instagram?: string; // e.g. "allafoglia"
   avatar: string;
   banner: string;
   foundedYear: number;
@@ -108,10 +111,43 @@ export interface CatalogFilterState {
   period: string;
   style: string;
   dealerId: string;
+  location?: string;
   condition: string;
   onlyCertified: boolean;
   onlyAvailable: boolean;
   minPrice: number | null;
   maxPrice: number | null;
   sortBy: 'price_asc' | 'price_desc' | 'newest' | 'period';
+}
+
+export type ArticleCategory =
+  | 'Oficios & Restauración'
+  | 'Interiorismo & Eclecticismo'
+  | 'Guías de Coleccionismo'
+  | 'Curiosidades Históricas';
+
+export interface ArticleSection {
+  sectionTitle?: string;
+  paragraphs: string[];
+  quote?: string;
+  tipBox?: string;
+}
+
+export interface BlogArticle {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string;
+  category: ArticleCategory;
+  readTime: string;
+  author: string;
+  authorRole: string;
+  date: string;
+  coverImage: string;
+  excerpt: string;
+  sections: ArticleSection[];
+  relatedCategories?: CategoryType[];
+  relatedItemIds?: string[];
+  tags: string[];
+  featured?: boolean;
 }

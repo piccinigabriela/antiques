@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Circular background with subtle ivory gradient/tone -->
+  <circle cx="250" cy="250" r="248" fill="#1c1917"/>
+  
+  <!-- Outer concentric ring -->
+  <circle cx="250" cy="250" r="236" fill="none" stroke="#d4af37" stroke-width="1.5" stroke-opacity="0.6"/>
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#f5eedc" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- Inner delicate ring -->
+  <circle cx="250" cy="250" r="172" fill="none" stroke="#d4af37" stroke-width="1.2" stroke-opacity="0.7"/>
+
+  <!-- Circular text path for ARTICUARIOS • ALTA ANTIGÜEDAD -->
+  <def>
+    <path id="textCircle" d="M 250,250 m -204,0 a 204,204 0 1,1 408,0 a 204,204 0 1,1 -408,0" />
+  </def>
+  <text font-family="'Cormorant Garamond', 'Times New Roman', serif" font-size="19" font-weight="500" letter-spacing="8" fill="#e8ded1">
+    <textPath href="#textCircle" startOffset="50%" text-anchor="middle">
+      ARTICUARIOS  •  ALTA ANTIGÜEDAD  •
+    </textPath>
+  </text>
+
+  <!-- Central Monogram A: Clean, noble serif, non-voluptuous -->
+  <g transform="translate(0, 0)">
+    <path d="
+      M 250,140 
+      L 242,140 
+      C 236,140 231,142 227,151 
+      L 155,338 
+      C 151,348 147,352 136,354 
+      L 128,356 
+      L 128,362 
+      L 194,362 
+      L 194,356 
+      L 185,354 
+      C 174,352 171,347 175,337 
+      L 196,282 
+      L 304,282 
+      L 325,337 
+      C 329,347 326,352 315,354 
+      L 306,356 
+      L 306,362 
+      L 372,362 
+      L 372,356 
+      L 364,354 
+      C 353,352 349,348 345,338 
+      L 273,151 
+      C 269,142 264,140 258,140 
+      Z
+      M 250,188 
+      L 293,270 
+      L 207,270 
+      Z
+    " fill="#fcfbf9" fill-rule="evenodd"/>
+
+    <!-- Subtle gold accent diamond in the center crossbar -->
+    <polygon points="250,266 254,270 250,274 246,270" fill="#d4af37"/>
+  </g>
+</svg>
