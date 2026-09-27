@@ -1123,7 +1123,7 @@ export default function App() {
         />
       )}
 
-      {/* 1.1 Modal de Reserva y Seña en Custodia (PayPal, Payoneer, USDT) */}
+      {/* 1.1 Modal de Reserva y Seña en Custodia (Payoneer, USDT, Wire USD) */}
       {reservationItem && (
         <ReservationModal
           isOpen={!!reservationItem}
@@ -1264,20 +1264,24 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-6 text-stone-600">
-            <button
-              onClick={() => setIsPinterestModalOpen(true)}
-              className="flex items-center space-x-1.5 text-red-800 hover:text-red-950 font-medium transition-colors cursor-pointer"
-            >
-              <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
-              <span>Pinterest Shopping (Feed XML)</span>
-            </button>
-            <button
-              onClick={() => setIsLogoModalOpen(true)}
-              className="flex items-center space-x-1 text-amber-900 hover:text-amber-700 font-medium transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-              <span>Monograma Oficial</span>
-            </button>
+            {authenticatedDealer && (
+              <>
+                <button
+                  onClick={() => setIsPinterestModalOpen(true)}
+                  className="flex items-center space-x-1.5 text-red-800 hover:text-red-950 font-medium transition-colors cursor-pointer"
+                >
+                  <span className="w-2 h-2 rounded-full bg-red-600"></span>
+                  <span>Pinterest Shopping</span>
+                </button>
+                <button
+                  onClick={() => setIsLogoModalOpen(true)}
+                  className="flex items-center space-x-1 text-amber-900 hover:text-amber-700 font-medium transition-colors cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Monograma Oficial</span>
+                </button>
+              </>
+            )}
             <button
               onClick={() => {
                 setCurrentView('magazine');

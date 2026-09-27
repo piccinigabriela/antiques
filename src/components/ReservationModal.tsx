@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, CheckCircle2, AlertCircle, Copy, ExternalLink, QrCode } from 'lucide-react';
+import { ShieldCheck, Lock, CheckCircle2, AlertCircle, Copy, ExternalLink, QrCode, CreditCard, Building2, Check } from 'lucide-react';
 import { AntiqueItem, Dealer } from '../types';
-import { formatCurrency } from '../utils/whatsapp';
 
 interface ReservationModalProps {
   isOpen: boolean;
@@ -25,7 +24,8 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   const depositAmount = Math.round(item.price * (depositPercent / 100));
   const remainingAmount = item.price - depositAmount;
 
-  const [selectedMethod, setSelectedMethod] = useState<'paypal' | 'payoneer' | 'usdt' | 'local'>('paypal');
+  const [selectedMethod, setSelectedMethod] = useState<'payoneer' | 'usdt' | 'wire'>('payoneer');
+  const [payoneerSubtype, setPayoneerSubtype] = useState<'account' | 'card'>('account');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
       setIsProcessing(false);
       setIsComplete(true);
       onReservationSuccess(item.id, method, depositAmount);
-    }, 1600);
+    }, 1500);
   };
 
   return (
@@ -62,13 +62,13 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 Reserva de Pieza en Custodia
               </h2>
               <p className="text-xs text-stone-500">
-                Garantía oficial de 72 horas para inspección y retiro
+                Garantía oficial de 72 horas para inspección y retiro en galería
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full text-stone-400 hover:text-stone-800 hover:bg-stone-100 flex items-center justify-center text-lg"
+            className="w-8 h-8 rounded-full text-stone-400 hover:text-stone-800 hover:bg-stone-100 flex items-center justify-center text-lg cursor-pointer"
           >
             ✕
           </button>
@@ -101,7 +101,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               <span className="text-[10px] uppercase tracking-wider text-stone-500 block">
                 Seña del 10%
               </span>
-              <span className="font-serif text-xl font-bold text-stone-950">
+              <span className="font-serif text-xl font-bold text-amber-900">
                 USD ${depositAmount}
               </span>
               <span className="text-[10px] text-stone-500 block">
@@ -115,56 +115,31 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               {/* Payment Methods Selection */}
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-stone-700 block mb-2.5">
-                  Selecciona la pasarela de reserva segura:
+                  Selecciona el método de pago para la seña:
                 </label>
 
-                <div className="grid grid-cols-2 gap-2.5">
-                  {/* PayPal Official */}
-                  <button
-                    type="button"
-                    onClick={() => setSelectedMethod('paypal')}
-                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left ${
-                      selectedMethod === 'paypal'
-                        ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-500'
-                        : 'border-[#ded5c7] bg-white hover:bg-stone-50'
-                    }`}
-                  >
-                    <div className="w-9 h-9 rounded bg-[#003087] flex items-center justify-center shrink-0">
-                      <span className="text-white font-black text-xs italic tracking-tighter">
-                        Pay<span className="text-[#0079C1]">Pal</span>
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-stone-900 text-xs block">
-                        PayPal Oficial
-                      </span>
-                      <span className="text-[10px] text-stone-500 block">
-                        Saldo o Tarjeta USD
-                      </span>
-                    </div>
-                  </button>
-
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {/* Payoneer Official */}
                   <button
                     type="button"
                     onClick={() => setSelectedMethod('payoneer')}
-                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left ${
+                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left cursor-pointer ${
                       selectedMethod === 'payoneer'
                         ? 'border-orange-500 bg-orange-50/50 ring-1 ring-orange-400'
                         : 'border-[#ded5c7] bg-white hover:bg-stone-50'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded bg-[#FF4800] flex items-center justify-center shrink-0">
-                      <span className="text-white font-bold text-xs tracking-tighter">
+                    <div className="w-9 h-9 rounded bg-[#FF4800] flex items-center justify-center shrink-0 shadow-xs">
+                      <span className="text-white font-bold text-sm tracking-tighter">
                         P
                       </span>
                     </div>
                     <div>
                       <span className="font-semibold text-stone-900 text-xs block">
-                        Payoneer
+                        Payoneer Oficial
                       </span>
                       <span className="text-[10px] text-stone-500 block">
-                        USD / Transferencia int.
+                        Cuenta Payoneer / Tarjeta
                       </span>
                     </div>
                   </button>
@@ -173,14 +148,14 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setSelectedMethod('usdt')}
-                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left ${
+                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left cursor-pointer ${
                       selectedMethod === 'usdt'
                         ? 'border-emerald-600 bg-emerald-50/50 ring-1 ring-emerald-500'
                         : 'border-[#ded5c7] bg-white hover:bg-stone-50'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded bg-[#26A17B] flex items-center justify-center shrink-0">
-                      <span className="text-white font-bold text-xs">
+                    <div className="w-9 h-9 rounded bg-[#26A17B] flex items-center justify-center shrink-0 shadow-xs">
+                      <span className="text-white font-bold text-sm">
                         ₮
                       </span>
                     </div>
@@ -189,32 +164,30 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                         Dólar Digital (USDT)
                       </span>
                       <span className="text-[10px] text-stone-500 block">
-                        Privado • Red Tron / Polygon
+                        TRC-20 / Polygon
                       </span>
                     </div>
                   </button>
 
-                  {/* Mercado Pago / Transferencia */}
+                  {/* Transferencia Bancaria USD / Wire */}
                   <button
                     type="button"
-                    onClick={() => setSelectedMethod('local')}
-                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left ${
-                      selectedMethod === 'local'
-                        ? 'border-sky-600 bg-sky-50/50 ring-1 ring-sky-500'
+                    onClick={() => setSelectedMethod('wire')}
+                    className={`p-3 rounded-sm border flex items-center space-x-3 transition-all text-left cursor-pointer ${
+                      selectedMethod === 'wire'
+                        ? 'border-stone-800 bg-stone-100 ring-1 ring-stone-700'
                         : 'border-[#ded5c7] bg-white hover:bg-stone-50'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded bg-[#009EE3] flex items-center justify-center shrink-0">
-                      <span className="text-white font-bold text-xs">
-                        MP
-                      </span>
+                    <div className="w-9 h-9 rounded bg-stone-800 flex items-center justify-center shrink-0 shadow-xs">
+                      <Building2 className="w-4 h-4 text-amber-200" />
                     </div>
                     <div>
                       <span className="font-semibold text-stone-900 text-xs block">
-                        Transferencia ARS
+                        Wire / ACH (USD)
                       </span>
                       <span className="text-[10px] text-stone-500 block">
-                        Mercado Pago / Alias
+                        Depósito bancario EE.UU.
                       </span>
                     </div>
                   </button>
@@ -223,69 +196,93 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
 
               {/* Dynamic Payment Details Area */}
               <div className="p-4 bg-white border border-[#e2dacd] rounded-sm space-y-4">
-                {selectedMethod === 'paypal' && (
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-2 text-xs text-stone-600">
-                      <Lock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                      <span>
-                        Se abrirá la pasarela segura y certificada de <strong>PayPal Inc.</strong> Podrás pagar con tu saldo internacional o tarjeta de crédito sin tributación local.
-                      </span>
-                    </div>
-
-                    <div className="bg-stone-50 p-3 rounded-sm border border-stone-200 flex items-center justify-between text-xs">
-                      <span className="text-stone-500 font-mono">Monto a debitar:</span>
-                      <span className="font-bold text-blue-900 font-mono text-sm">USD ${depositAmount}.00</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={isProcessing}
-                      onClick={() => handleSimulatePayment('PayPal')}
-                      className="w-full py-3 px-4 bg-[#FFC439] hover:bg-[#F4BB30] text-[#003087] font-bold text-sm rounded shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
-                    >
-                      {isProcessing ? (
-                        <span>Conectando con PayPal...</span>
-                      ) : (
-                        <>
-                          <span className="italic font-black text-base">Pay<span className="text-[#0079C1]">Pal</span></span>
-                          <span className="font-medium text-stone-800">| Pagar Seña de USD ${depositAmount}</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-
                 {selectedMethod === 'payoneer' && (
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     <div className="flex items-start space-x-2 text-xs text-stone-600">
                       <Lock className="w-4 h-4 text-orange-600 shrink-0 mt-0.5" />
                       <span>
-                        Paga directo a la cuenta corporativa de Articuarios en <strong>Payoneer</strong> con 0% de recargo por transferencia entre cuentas o tarjeta bancaria internacional.
+                        Paga seguro a través de la cuenta corporativa oficial de <strong>Payoneer</strong>. Si tienes cuenta Payoneer, el traspaso entre cuentas es instantáneo y sin comisiones (0%). También puedes abonar con tarjeta internacional.
                       </span>
                     </div>
 
-                    <div className="bg-stone-50 p-3 rounded-sm border border-stone-200 space-y-1.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-stone-500">Beneficiario Payoneer:</span>
-                        <span className="font-mono font-medium text-stone-900">custodia@articuarios.store</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-stone-500">Monto exacto:</span>
-                        <span className="font-mono font-bold text-orange-700">USD ${depositAmount}.00</span>
-                      </div>
+                    {/* Payoneer sub-options */}
+                    <div className="flex rounded border border-stone-200 p-0.5 bg-stone-100 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setPayoneerSubtype('account')}
+                        className={`flex-1 py-1.5 px-3 rounded font-medium transition-all ${
+                          payoneerSubtype === 'account'
+                            ? 'bg-white text-stone-900 shadow-xs font-semibold'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        Pagar entre Cuentas Payoneer (0% Comisión)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPayoneerSubtype('card')}
+                        className={`flex-1 py-1.5 px-3 rounded font-medium transition-all ${
+                          payoneerSubtype === 'card'
+                            ? 'bg-white text-stone-900 shadow-xs font-semibold'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        Tarjeta Internacional / Enlace Payoneer
+                      </button>
                     </div>
+
+                    {payoneerSubtype === 'account' ? (
+                      <div className="bg-[#fffbf7] p-3.5 rounded-sm border border-orange-200 space-y-2.5 text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="text-stone-500">Email de Cuenta Payoneer:</span>
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-mono font-bold text-orange-950 bg-orange-100/60 px-2 py-0.5 rounded border border-orange-200">
+                              custodia@articuarios.store
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy('custodia@articuarios.store', 'payoneer-email')}
+                              className="p-1 text-orange-700 hover:text-orange-900 hover:bg-orange-100 rounded cursor-pointer"
+                              title="Copiar email"
+                            >
+                              {copiedField === 'payoneer-email' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-stone-500">Monto exacto de seña:</span>
+                          <span className="font-mono font-bold text-orange-700 text-sm">USD ${depositAmount}.00</span>
+                        </div>
+
+                        <div className="text-[11px] text-stone-500 pt-1 border-t border-orange-100">
+                          ℹ️ Entra a tu cuenta Payoneer → <strong>Pagar → Realizar un pago a una cuenta Payoneer</strong> y envía el importe al correo indicado con referencia <code>RES-{item.sku}</code>.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-[#fffbf7] p-3.5 rounded-sm border border-orange-200 space-y-2.5 text-xs">
+                        <div className="flex items-center space-x-2 text-stone-700">
+                          <CreditCard className="w-4 h-4 text-orange-600" />
+                          <span className="font-medium">Pasarela Payoneer Checkout para tarjetas Visa, Mastercard o AMEX</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-stone-500">Monto de la orden:</span>
+                          <span className="font-mono font-bold text-orange-700">USD ${depositAmount}.00</span>
+                        </div>
+                      </div>
+                    )}
 
                     <button
                       type="button"
                       disabled={isProcessing}
-                      onClick={() => handleSimulatePayment('Payoneer')}
+                      onClick={() => handleSimulatePayment('Payoneer Oficial')}
                       className="w-full py-3 px-4 bg-[#FF4800] hover:bg-[#E04000] text-white font-bold text-sm rounded shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
                     >
                       {isProcessing ? (
-                        <span>Validando transferencia Payoneer...</span>
+                        <span>Procesando pago con Payoneer...</span>
                       ) : (
                         <>
-                          <span>Pagar con Payoneer (USD ${depositAmount})</span>
+                          <span>Confirmar Seña con Payoneer (USD ${depositAmount})</span>
                           <ExternalLink className="w-4 h-4 ml-1" />
                         </>
                       )}
@@ -298,32 +295,36 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                     <div className="flex items-start space-x-2 text-xs text-stone-600">
                       <QrCode className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                       <span>
-                        Transferencia descentralizada y confidencial en <strong>USDT (Tether)</strong>. Confirmación instantánea en blockchain.
+                        Transferencia confidencial en <strong>USDT (Tether)</strong>. Sin intermediarios bancarios y con confirmación instantánea en la red.
                       </span>
                     </div>
 
-                    <div className="bg-stone-50 p-3 rounded-sm border border-stone-200 text-xs space-y-2">
+                    <div className="bg-stone-50 p-3.5 rounded-sm border border-stone-200 text-xs space-y-2.5">
                       <div className="flex justify-between items-center">
-                        <span className="text-stone-500">Red permitida:</span>
-                        <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-mono font-semibold text-[10px]">
-                          Polygon / TRC-20
+                        <span className="text-stone-500">Redes admitidas:</span>
+                        <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono font-semibold text-[10px]">
+                          TRC-20 (Tron) / Polygon
                         </span>
                       </div>
                       <div>
-                        <span className="text-stone-500 block mb-0.5">Billetera de Custodia:</span>
+                        <span className="text-stone-500 block mb-1">Dirección de Billetera de Custodia:</span>
                         <div className="flex items-center space-x-2">
-                          <code className="bg-white px-2 py-1 border border-stone-300 rounded font-mono text-[11px] text-stone-800 flex-1 truncate">
-                            0x71C...8B3f4D99aE2
+                          <code className="bg-white px-2 py-1.5 border border-stone-300 rounded font-mono text-[11px] text-stone-800 flex-1 truncate">
+                            0x71C694b4E19859f81a7b82Bc7171e8B3f4D99aE2
                           </code>
                           <button
                             type="button"
                             onClick={() => handleCopy('0x71C694b4E19859f81a7b82Bc7171e8B3f4D99aE2', 'wallet')}
-                            className="px-2.5 py-1 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-xs flex items-center space-x-1"
+                            className="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded text-xs flex items-center space-x-1 cursor-pointer"
                           >
-                            <Copy className="w-3 h-3" />
+                            <Copy className="w-3.5 h-3.5" />
                             <span>{copiedField === 'wallet' ? 'Copiado!' : 'Copiar'}</span>
                           </button>
                         </div>
+                      </div>
+                      <div className="flex justify-between items-center text-xs pt-1 border-t border-stone-200">
+                        <span className="text-stone-500">Importe a transferir:</span>
+                        <span className="font-mono font-bold text-emerald-700">{depositAmount} USDT</span>
                       </div>
                     </div>
 
@@ -334,7 +335,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                       className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm rounded shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
                     >
                       {isProcessing ? (
-                        <span>Verificando transacción en red...</span>
+                        <span>Verificando transacción en blockchain...</span>
                       ) : (
                         <span>Confirmar Envío de {depositAmount} USDT</span>
                       )}
@@ -342,47 +343,57 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                   </div>
                 )}
 
-                {selectedMethod === 'local' && (
+                {selectedMethod === 'wire' && (
                   <div className="space-y-3">
                     <div className="flex items-start space-x-2 text-xs text-stone-600">
-                      <Lock className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                      <Lock className="w-4 h-4 text-stone-700 shrink-0 mt-0.5" />
                       <span>
-                        Transferencia en Pesos Argentinos (ARS) a cotización MEP/Blue del día. 
+                        Transferencia bancaria internacional directa a cuenta en dólares (ACH / Wire en EE.UU. proporcionada por el servicio bancario global de Payoneer).
                       </span>
                     </div>
 
-                    <div className="bg-stone-50 p-3 rounded-sm border border-stone-200 text-xs space-y-1.5">
+                    <div className="bg-stone-50 p-3.5 rounded-sm border border-stone-200 text-xs space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-stone-500">Alias CBU:</span>
-                        <div className="flex items-center space-x-2">
-                          <strong className="font-mono text-stone-900">ARTICUARIOS.RESERVA</strong>
+                        <span className="text-stone-500">Banco Receptor:</span>
+                        <span className="font-mono font-semibold text-stone-900">First Century Bank / Community Federal</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-500">Routing (ABA):</span>
+                        <span className="font-mono text-stone-900">061120084</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-stone-500">Número de Cuenta USD:</span>
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-mono font-bold text-stone-900">402948102948</span>
                           <button
                             type="button"
-                            onClick={() => handleCopy('ARTICUARIOS.RESERVA', 'alias')}
-                            className="text-stone-500 hover:text-stone-900"
+                            onClick={() => handleCopy('402948102948', 'wire-account')}
+                            className="p-1 text-stone-500 hover:text-stone-900 cursor-pointer"
                           >
                             <Copy className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-stone-500">Equivalente aprox:</span>
-                        <span className="font-bold text-stone-900 font-mono">
-                          ARS ${(depositAmount * 1350).toLocaleString('es-AR')}
-                        </span>
+                        <span className="text-stone-500">Beneficiario:</span>
+                        <span className="font-mono text-stone-900">Articuarios International LLC</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-stone-200">
+                        <span className="text-stone-500">Monto:</span>
+                        <span className="font-mono font-bold text-stone-900">USD ${depositAmount}.00</span>
                       </div>
                     </div>
 
                     <button
                       type="button"
                       disabled={isProcessing}
-                      onClick={() => handleSimulatePayment('Transferencia Local')}
-                      className="w-full py-3 px-4 bg-[#009EE3] hover:bg-[#0082BD] text-white font-bold text-sm rounded shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                      onClick={() => handleSimulatePayment('Wire Transfer USD')}
+                      className="w-full py-3 px-4 bg-stone-900 hover:bg-stone-800 text-white font-bold text-sm rounded shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
                     >
                       {isProcessing ? (
-                        <span>Registrando comprobante...</span>
+                        <span>Registrando solicitud de transferencia...</span>
                       ) : (
-                        <span>Pagar con Mercado Pago / Transferencia</span>
+                        <span>Registrar Transferencia Bancaria (USD ${depositAmount})</span>
                       )}
                     </button>
                   </div>
@@ -393,7 +404,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               <div className="flex items-center space-x-2 text-[11px] text-stone-500">
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
-                  La seña congela la pieza por 72 horas. Si el peritaje no coincide con la descripción al revisarla, te reintegramos el 100% de la seña.
+                  La seña congela la pieza por 72 horas. Si el peritaje no coincide con la descripción al revisarla físicamente, se reintegra el 100% de los fondos.
                 </span>
               </div>
             </>
@@ -412,7 +423,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                   Pieza Bloqueada en Custodia
                 </h3>
                 <p className="text-xs text-stone-600 max-w-md mx-auto mt-2">
-                  Se ha registrado la seña de <strong>USD ${depositAmount}</strong> mediante {selectedMethod.toUpperCase()}. La pieza ahora figura como <strong>RESERVADA</strong> en el catálogo.
+                  Se ha registrado la seña de <strong>USD ${depositAmount}</strong> mediante {selectedMethod === 'payoneer' ? 'Payoneer Oficial' : selectedMethod === 'usdt' ? 'Dólar Digital (USDT)' : 'Transferencia Bancaria USD'}. La pieza ahora figura como <strong>RESERVADA</strong> en el catálogo.
                 </p>
               </div>
 
@@ -422,7 +433,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                   <span className="font-mono font-bold text-stone-900">RES-{item.sku}-{Date.now().toString().slice(-4)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-500">Saldo a abonar en galería:</span>
+                  <span className="text-stone-500">Saldo a liquidar al retirar:</span>
                   <span className="font-mono font-bold text-emerald-800">USD ${remainingAmount}</span>
                 </div>
                 <div className="flex justify-between">
@@ -434,7 +445,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <a
                   href={`https://wa.me/${dealer.whatsapp}?text=${encodeURIComponent(
-                    `Hola ${dealer.name}! Acabo de reservar la pieza "${item.title}" (SKU: ${item.sku}) mediante la plataforma Articuarios. Ya aboné la seña del 10% (USD $${depositAmount}). Me contacto para coordinar la inspección y el retiro de la pieza.`
+                    `Hola ${dealer.name}! Acabo de reservar la pieza "${item.title}" (SKU: ${item.sku}) mediante la plataforma Articuarios. Ya registré la seña del 10% (USD $${depositAmount}) vía Payoneer/Custodia. Me contacto para coordinar la inspección y el retiro de la pieza.`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -447,7 +458,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-full sm:w-auto px-5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded font-medium text-xs"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded font-medium text-xs cursor-pointer"
                 >
                   Cerrar
                 </button>

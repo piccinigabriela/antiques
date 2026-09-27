@@ -137,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Buttons */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {onOpenPinterestModal && (
+            {authenticatedDealer && onOpenPinterestModal && (
               <button
                 onClick={onOpenPinterestModal}
                 className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-red-900 hover:text-red-950 bg-red-50 hover:bg-red-100 border border-red-200 transition-all cursor-pointer"
@@ -148,7 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {onOpenLogoModal && (
+            {authenticatedDealer && onOpenLogoModal && (
               <button
                 onClick={onOpenLogoModal}
                 className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-stone-700 hover:text-stone-950 bg-stone-100 hover:bg-stone-200 border border-stone-200/80 transition-all cursor-pointer"

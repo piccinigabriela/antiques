@@ -185,7 +185,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
                 {/* Action CTAs */}
                 <div className="space-y-2.5">
-                  {/* Primary: Reservation with official PayPal / Payoneer */}
+                  {/* Primary: Reservation with official Payoneer / USD Custody */}
                   {item.status === 'available' && onOpenReservation && (
                     <button
                       id="modal-reserve-deposit-btn"
@@ -228,7 +228,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <div className="mt-4 pt-3 border-t border-[#eee5d8] text-[11px] text-stone-500 space-y-1">
                   <div className="flex items-center space-x-1.5 font-medium text-stone-700">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Custodia Articuarios Protegida (PayPal • Payoneer • USDT)</span>
+                    <span>Custodia Articuarios Protegida (Payoneer Oficial • USDT • Wire USD)</span>
                   </div>
                   <p className="text-[10px] text-stone-400">
                     La seña congela la exclusividad por 72 hs. El 90% restante se liquida de forma privada con la galería al momento del retiro o inspección física.
