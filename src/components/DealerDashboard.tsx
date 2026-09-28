@@ -625,6 +625,11 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                                   </>
                                 )}
                               </div>
+                              {item.provenance && (
+                                <p className="text-[10px] text-amber-900 italic font-serif truncate mt-0.5" title={`Procedencia: ${item.provenance}`}>
+                                  🏛️ {item.provenance}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -636,8 +641,21 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                         </td>
 
                         {/* Price */}
-                        <td className="py-3.5 px-4 font-serif font-bold text-stone-900 text-sm">
-                          {formatCurrency(item.price, item.currency)}
+                        <td className="py-3.5 px-4">
+                          {item.status === 'sold' || item.hidePrice ? (
+                            <div>
+                              <span className="font-serif font-bold text-stone-600 text-xs uppercase tracking-wider block">
+                                Vendido
+                              </span>
+                              <span className="text-[10px] text-stone-400 block font-sans">
+                                (Oculto en catálogo)
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-serif font-bold text-stone-900 text-sm">
+                              {formatCurrency(item.price, item.currency)}
+                            </span>
+                          )}
                         </td>
 
                         {/* Certificate */}
@@ -665,13 +683,13 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                                 ? 'bg-amber-50 text-amber-800 border-amber-300'
                                 : item.status === 'reserved'
                                 ? 'bg-stone-100 text-stone-700 border-stone-300'
-                                : 'bg-red-50 text-red-800 border-red-300'
+                                : 'bg-stone-200 text-stone-800 border-stone-400'
                             }`}
                           >
                             <option value="available">Disponible</option>
                             <option value="in_negotiation">En Negociación</option>
                             <option value="reserved">Reservado</option>
-                            <option value="sold">Vendido</option>
+                            <option value="sold">Vendido (Archivo)</option>
                           </select>
                         </td>
 

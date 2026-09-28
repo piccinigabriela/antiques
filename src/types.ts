@@ -53,6 +53,8 @@ export interface AntiqueItem {
   status: ItemStatus;
   dealerId: string;
   location?: string; // e.g. "CABA (Capital Federal)", "San Fernando, Prov. Bs. As.", "Tigre", "Mendoza"
+  provenance?: string; // e.g. "Colección privada de la familia...", "Colección particular", etc.
+  hidePrice?: boolean; // explicitly hide price for archive or high-prestige pieces
   featured?: boolean;
   createdAt: string;
 }

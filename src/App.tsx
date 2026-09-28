@@ -747,7 +747,7 @@ export default function App() {
                     <div className="w-full md:w-56 shrink-0 p-5 sm:p-6 bg-white border border-[#e8e2d8] rounded-sm flex flex-col justify-between shadow-2xs">
                       <div>
                         <h2 className="font-serif text-2xl sm:text-3xl text-stone-950 font-normal leading-snug">
-                          Consulta las<br className="hidden md:inline" /> novedades
+                          Ingresos &<br className="hidden md:inline" /> Curaduría
                         </h2>
                         <button
                           onClick={() => {
@@ -759,7 +759,7 @@ export default function App() {
                           }}
                           className="text-xs text-stone-600 hover:text-stone-950 underline underline-offset-4 mt-3 sm:mt-4 block font-medium tracking-wide transition-colors cursor-pointer"
                         >
-                          Todas las novedades →
+                          Ver catálogo completo →
                         </button>
                       </div>
 
@@ -767,7 +767,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => scrollCarousel('left')}
-                          className="w-8 h-8 rounded-full border border-stone-300 hover:border-stone-800 flex items-center justify-center text-stone-700 hover:text-stone-950 transition-colors"
+                          className="w-8 h-8 rounded-full border border-stone-300 hover:border-stone-800 flex items-center justify-center text-stone-700 hover:text-stone-950 transition-colors cursor-pointer"
                           aria-label="Anterior"
                         >
                           <ChevronLeft className="w-4 h-4" />
@@ -775,7 +775,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => scrollCarousel('right')}
-                          className="w-8 h-8 rounded-full border border-stone-300 hover:border-stone-800 flex items-center justify-center text-stone-700 hover:text-stone-950 transition-colors"
+                          className="w-8 h-8 rounded-full border border-stone-300 hover:border-stone-800 flex items-center justify-center text-stone-700 hover:text-stone-950 transition-colors cursor-pointer"
                           aria-label="Siguiente"
                         >
                           <ChevronRight className="w-4 h-4" />
@@ -803,11 +803,20 @@ export default function App() {
                                 referrerPolicy="no-referrer"
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
-                              <div className="absolute top-2.5 left-2.5">
-                                <span className="px-1.5 py-0.5 bg-stone-900/90 text-white text-[9px] uppercase tracking-wider font-semibold rounded-xs backdrop-blur-xs">
-                                  Nuevo
-                                </span>
-                              </div>
+                              {item.status === 'sold' && (
+                                <div className="absolute top-2.5 left-2.5">
+                                  <span className="px-2 py-0.5 bg-stone-900/90 text-white text-[9px] uppercase tracking-wider font-semibold rounded-xs backdrop-blur-xs font-serif">
+                                    Vendido
+                                  </span>
+                                </div>
+                              )}
+                              {item.provenance && item.status !== 'sold' && (
+                                <div className="absolute top-2.5 left-2.5">
+                                  <span className="px-2 py-0.5 bg-amber-950/85 text-amber-100 text-[9px] uppercase tracking-wider font-serif rounded-xs backdrop-blur-xs">
+                                    Colección Privada
+                                  </span>
+                                </div>
+                              )}
                             </div>
                             <div className="p-3.5 flex-1 flex flex-col justify-between">
                               <div>
@@ -822,9 +831,15 @@ export default function App() {
                                 </p>
                               </div>
                               <div className="mt-2 pt-2 border-t border-[#f0eae1] flex items-center justify-between">
-                                <span className="text-xs sm:text-sm font-semibold text-stone-950 font-mono">
-                                  USD ${item.price.toLocaleString('es-AR')}
-                                </span>
+                                {item.status === 'sold' || item.hidePrice ? (
+                                  <span className="text-[11px] font-serif font-bold text-stone-600 uppercase tracking-wider">
+                                    Vendido • Archivo
+                                  </span>
+                                ) : (
+                                  <span className="text-xs sm:text-sm font-semibold text-stone-950 font-mono">
+                                    USD ${item.price.toLocaleString('es-AR')}
+                                  </span>
+                                )}
                                 <span className="text-[10px] text-stone-400 group-hover:text-stone-900 transition-colors">
                                   Ver ficha →
                                 </span>

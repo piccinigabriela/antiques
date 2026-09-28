@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Award, ShieldCheck, MapPin, Phone, MessageSquareQuote, CheckCircle2, AlertCircle, Share2, Truck, Sparkles, Trash2, Instagram } from 'lucide-react';
+import { X, Award, ShieldCheck, MapPin, Phone, MessageSquareQuote, CheckCircle2, AlertCircle, Share2, Truck, Sparkles, Trash2, Instagram, Landmark } from 'lucide-react';
 import { AntiqueItem, Dealer } from '../types';
 import { formatCurrency, generateItemWhatsAppUrl } from '../utils/whatsapp';
 
@@ -146,9 +146,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <span className="font-mono">REF: {item.sku}</span>
                 </div>
 
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1c1917] leading-tight mb-3">
+                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1c1917] leading-tight mb-2">
                   {item.title}
                 </h1>
+
+                {/* Provenance Banner if set */}
+                {item.provenance && (
+                  <div className="mb-3">
+                    <span className="inline-flex items-center space-x-1.5 text-xs font-serif text-amber-950 bg-amber-50/90 border border-amber-200 px-2.5 py-1 rounded shadow-2xs">
+                      <Landmark className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                      <span><strong>Procedencia:</strong> {item.provenance}</span>
+                    </span>
+                  </div>
+                )}
 
                 <div className="flex flex-wrap items-center gap-2 text-sm text-stone-600 mb-4 pb-4 border-b border-[#e8dfd3]">
                   <span className="font-medium text-stone-900">{item.period}</span>
@@ -165,75 +175,114 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   )}
                 </div>
 
-                {/* Price Display */}
-                <div className="mb-6">
-                  <span className="text-xs text-stone-500 uppercase tracking-wider block mb-1">
-                    Precio Estimado de Lista
-                  </span>
-                  <div className="flex items-baseline space-x-3">
-                    <span className="font-serif text-3xl sm:text-4xl font-bold text-[#1c1917]">
-                      {formatCurrency(item.price, item.currency)}
+                {/* Price Display or Sold Banner */}
+                {item.status === 'sold' || item.hidePrice ? (
+                  <div className="mb-6 bg-stone-100 border border-stone-200 p-4 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-2.5 py-1 bg-stone-800 text-stone-100 rounded text-xs font-serif uppercase tracking-widest font-semibold">
+                        Pieza Vendida
+                      </span>
+                      <span className="text-xs text-stone-600 font-medium">
+                        Archivo Histórico de Colección
+                      </span>
+                    </div>
+                    <p className="text-xs text-stone-600 mt-2 leading-relaxed">
+                      Esta pieza histórica de alta jerarquía fue adjudicada y forma parte de un acervo o colección privada. Se exhibe en el catálogo como testimonio de procedencia y autenticidad pericial.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <span className="text-xs text-stone-500 uppercase tracking-wider block mb-1">
+                      Precio Estimado de Lista
                     </span>
-                    <span className="text-xs text-stone-500 font-medium">
-                      ({item.currency})
+                    <div className="flex items-baseline space-x-3">
+                      <span className="font-serif text-3xl sm:text-4xl font-bold text-[#1c1917]">
+                        {formatCurrency(item.price, item.currency)}
+                      </span>
+                      <span className="text-xs text-stone-500 font-medium">
+                        ({item.currency})
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded inline-block mt-2 font-medium">
+                      {item.status === 'available' ? '✓ Pieza disponible para entrega o retiro' : 'En proceso de negociación'}
                     </span>
                   </div>
-                  <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded inline-block mt-2 font-medium">
-                    {item.status === 'available' ? '✓ Pieza disponible para entrega o retiro' : 'En proceso de negociación'}
-                  </span>
-                </div>
+                )}
 
                 {/* Action CTAs */}
                 <div className="space-y-2.5">
-                  {/* Primary: Reservation with official Payoneer / USD Custody */}
-                  {item.status === 'available' && onOpenReservation && (
-                    <button
-                      id="modal-reserve-deposit-btn"
-                      type="button"
-                      onClick={() => onOpenReservation(item)}
-                      className="w-full py-3 px-4 bg-[#b45309] hover:bg-[#92400e] text-white rounded-md text-sm font-semibold transition-all flex items-center justify-center space-x-2 shadow-sm group cursor-pointer"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-amber-200" />
-                      <span>Reservar Pieza (Seña del 10% en Custodia)</span>
-                    </button>
+                  {item.status === 'sold' ? (
+                    /* CTAs for sold items: Request similar pieces */
+                    <div className="space-y-2">
+                      <a
+                        id="modal-whatsapp-similar-btn"
+                        href={`https://wa.me/${dealer.whatsapp}?text=${encodeURIComponent(
+                          `Hola ${dealer.name}! Vi en Articuarios la pieza del archivo histórico "${item.title}" (REF: ${item.sku}) que ya figura como vendida. Me gustaría consultarles si tienen disponible o pueden conseguir piezas similares o de la misma época/estilo para mi colección.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-3 px-4 bg-stone-900 hover:bg-emerald-700 text-white rounded-md text-sm font-medium transition-all flex items-center justify-center space-x-2 shadow-xs group cursor-pointer"
+                      >
+                        <Phone className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                        <span>Consultar por Piezas Similares a esta Obra</span>
+                      </a>
+                    </div>
+                  ) : (
+                    /* CTAs for active items */
+                    <>
+                      {/* Primary: Reservation with official Payoneer / USD Custody */}
+                      {item.status === 'available' && onOpenReservation && (
+                        <button
+                          id="modal-reserve-deposit-btn"
+                          type="button"
+                          onClick={() => onOpenReservation(item)}
+                          className="w-full py-3 px-4 bg-[#b45309] hover:bg-[#92400e] text-white rounded-md text-sm font-semibold transition-all flex items-center justify-center space-x-2 shadow-sm group cursor-pointer"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-amber-200" />
+                          <span>Reservar Pieza (Seña del 10% en Custodia)</span>
+                        </button>
+                      )}
+
+                      {/* WhatsApp Purchase / Direct Contact */}
+                      <a
+                        id="modal-whatsapp-acquire-btn"
+                        href={whatsappPurchaseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2.5 px-4 bg-stone-900 hover:bg-emerald-700 text-white rounded-md text-sm font-medium transition-all flex items-center justify-center space-x-2 shadow-xs group"
+                      >
+                        <Phone className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                        <span>Contactar Galería por WhatsApp</span>
+                      </a>
+
+                      {/* Negotiation CTA */}
+                      <button
+                        id="modal-negotiate-btn"
+                        onClick={() => {
+                          onClose();
+                          onOpenNegotiation(item);
+                        }}
+                        className="w-full py-2.5 px-4 bg-white border border-[#ded5c7] hover:bg-[#faf6f0] text-stone-800 rounded-md text-sm font-medium transition-colors flex items-center justify-center space-x-2 cursor-pointer"
+                      >
+                        <MessageSquareQuote className="w-4 h-4 text-amber-800" />
+                        <span>Hacer Oferta / Negociar Precio</span>
+                      </button>
+                    </>
                   )}
-
-                  {/* WhatsApp Purchase / Direct Contact */}
-                  <a
-                    id="modal-whatsapp-acquire-btn"
-                    href={whatsappPurchaseUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 px-4 bg-stone-900 hover:bg-emerald-700 text-white rounded-md text-sm font-medium transition-all flex items-center justify-center space-x-2 shadow-xs group"
-                  >
-                    <Phone className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                    <span>Contactar Galería por WhatsApp</span>
-                  </a>
-
-                  {/* Negotiation CTA */}
-                  <button
-                    id="modal-negotiate-btn"
-                    onClick={() => {
-                      onClose();
-                      onOpenNegotiation(item);
-                    }}
-                    className="w-full py-2.5 px-4 bg-white border border-[#ded5c7] hover:bg-[#faf6f0] text-stone-800 rounded-md text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <MessageSquareQuote className="w-4 h-4 text-amber-800" />
-                    <span>Hacer Oferta / Negociar Precio</span>
-                  </button>
                 </div>
 
-                {/* Secure Custody Badge */}
-                <div className="mt-4 pt-3 border-t border-[#eee5d8] text-[11px] text-stone-500 space-y-1">
-                  <div className="flex items-center space-x-1.5 font-medium text-stone-700">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Custodia Articuarios Protegida (Payoneer Oficial • USDT • Wire USD)</span>
+                {/* Secure Custody Badge (if active item) */}
+                {item.status !== 'sold' && (
+                  <div className="mt-4 pt-3 border-t border-[#eee5d8] text-[11px] text-stone-500 space-y-1">
+                    <div className="flex items-center space-x-1.5 font-medium text-stone-700">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Custodia Articuarios Protegida (Payoneer Oficial • USDT • Wire USD)</span>
+                    </div>
+                    <p className="text-[10px] text-stone-400">
+                      La seña congela la exclusividad por 72 hs. El 90% restante se liquida de forma privada con la galería al momento del retiro o inspección física.
+                    </p>
                   </div>
-                  <p className="text-[10px] text-stone-400">
-                    La seña congela la exclusividad por 72 hs. El 90% restante se liquida de forma privada con la galería al momento del retiro o inspección física.
-                  </p>
-                </div>
+                )}
               </div>
 
               {/* Mini Dealer Card */}
@@ -349,6 +398,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   ))}
                 </div>
               </div>
+
+              {/* Procedencia / Colección de Origen */}
+              {item.provenance && (
+                <div className="space-y-1 md:col-span-2 bg-[#fdfaf5] p-3.5 rounded border border-[#dfd6c7]">
+                  <span className="text-[11px] uppercase tracking-wider font-semibold text-amber-900 block flex items-center space-x-1.5">
+                    <Landmark className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Colección de Pertenencia / Procedencia</span>
+                  </span>
+                  <p className="text-sm font-serif font-bold text-stone-900 mt-0.5">
+                    {item.provenance}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Estado de Conservación */}

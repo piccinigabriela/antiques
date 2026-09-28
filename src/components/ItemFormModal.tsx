@@ -19,7 +19,8 @@ import {
   Trash2,
   Star,
   Plus,
-  Layers
+  Layers,
+  Landmark
 } from 'lucide-react';
 import { AntiqueItem, CategoryType, ConservationState, Dealer } from '../types';
 import { PhotoStudioModal } from './PhotoStudioModal';
@@ -117,6 +118,8 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
   const [targetStudioIndex, setTargetStudioIndex] = useState<number>(0);
   const [urlInput, setUrlInput] = useState<string>('');
   const [status, setStatus] = useState<AntiqueItem['status']>(initialItem?.status || 'available');
+  const [provenance, setProvenance] = useState<string>(initialItem?.provenance || '');
+  const [hidePrice, setHidePrice] = useState<boolean>(initialItem?.hidePrice ?? (initialItem?.status === 'sold'));
 
   // AI Cataloging & Photo Studio State
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
@@ -335,6 +338,8 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
       status,
       dealerId: selectedDealerId || activeDealer.id,
       location: location.trim() || undefined,
+      provenance: provenance.trim() || undefined,
+      hidePrice: hidePrice || status === 'sold',
       featured: initialItem?.featured || false,
       createdAt: initialItem?.createdAt || new Date().toISOString(),
     };
@@ -551,14 +556,15 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Precio de Lista (USD) *
+                  Precio de Lista (USD) {status !== 'sold' && '*'}
                 </label>
                 <input
                   type="number"
-                  required
-                  min={1}
+                  required={status !== 'sold'}
+                  min={0}
                   value={price || ''}
                   onChange={(e) => setPrice(Number(e.target.value))}
+                  placeholder={status === 'sold' ? 'Opcional (No se muestra al público)' : '2500'}
                   className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm font-serif font-bold text-stone-900 focus:ring-2 focus:ring-[#b45309]/50"
                 />
               </div>
@@ -569,15 +575,36 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                 </label>
                 <select
                   value={status}
-                  onChange={(e) => setStatus(e.target.value as AntiqueItem['status'])}
-                  className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50"
+                  onChange={(e) => {
+                    const newStatus = e.target.value as AntiqueItem['status'];
+                    setStatus(newStatus);
+                    if (newStatus === 'sold') {
+                      setHidePrice(true);
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50 font-medium"
                 >
                   <option value="available">Disponible</option>
                   <option value="in_negotiation">En Negociación</option>
                   <option value="reserved">Reservado</option>
-                  <option value="sold">Vendido</option>
+                  <option value="sold">Vendido (Archivo / Colección Privada)</option>
                 </select>
               </div>
+            </div>
+
+            {/* Opciones de visualización de precio para piezas vendidas o exclusivas */}
+            <div className="pt-2 border-t border-stone-200">
+              <label className="flex items-center space-x-2 text-xs text-stone-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={hidePrice || status === 'sold'}
+                  onChange={(e) => setHidePrice(e.target.checked)}
+                  className="rounded text-[#b45309] focus:ring-[#b45309]"
+                />
+                <span className="font-medium">
+                  Ocultar precio al público en el catálogo {status === 'sold' ? '(Automático para piezas vendidas: figurará como «Vendido • Archivo»)' : '(Mostrar solo como pieza de exhibición sin precio numérico)'}
+                </span>
+              </label>
             </div>
           </div>
 
@@ -589,6 +616,29 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                 Datos clave para tasación y venta pericial
               </span>
             </h3>
+
+            {/* Procedencia / Colección de Pertenencia */}
+            <div className="bg-[#fcfaf5] border border-amber-200/90 p-3.5 rounded-md space-y-1.5">
+              <label className="block text-xs font-bold text-amber-950 flex items-center justify-between">
+                <span className="flex items-center space-x-1.5">
+                  <Landmark className="w-4 h-4 text-amber-800" />
+                  <span>Pertenece a / Procedencia / Colección de Origen (Opcional)</span>
+                </span>
+                <span className="text-[10px] text-amber-800 font-normal">
+                  Ej: Colección privada de...
+                </span>
+              </label>
+              <input
+                type="text"
+                value={provenance}
+                onChange={(e) => setProvenance(e.target.value)}
+                placeholder="Ej: Colección privada de la familia Alvear / Colección particular / Acervo histórico..."
+                className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50 placeholder:text-stone-400 font-serif"
+              />
+              <p className="text-[11px] text-stone-500">
+                Aparecerá destacado en la ficha de la pieza para certificar origen, linaje o pinacoteca de pertenencia.
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>

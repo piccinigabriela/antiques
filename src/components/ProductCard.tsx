@@ -116,6 +116,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {item.title}
           </h3>
 
+          {/* Provenance / Colección Privada if present */}
+          {item.provenance && (
+            <div className="text-[11px] text-[#92400e] font-serif italic truncate mt-1 flex items-center space-x-1" title={`Procedencia: ${item.provenance}`}>
+              <span className="font-sans font-semibold text-[9px] uppercase tracking-wider bg-amber-50 border border-amber-200 px-1 py-0.2 rounded text-amber-900 not-italic">
+                Procedencia
+              </span>
+              <span className="truncate">{item.provenance}</span>
+            </div>
+          )}
+
           {/* Dealer and location info */}
           <div className="flex items-center justify-between text-xs text-stone-500 mt-1.5 gap-2">
             <span className="truncate">{dealer.name}</span>
@@ -131,32 +141,45 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Price & Primary Action */}
         <div className="pt-2.5 border-t border-stone-100 flex items-center justify-between">
           <div>
-            <span className="font-serif text-lg sm:text-xl font-bold text-stone-900 tracking-tight">
-              {formatCurrency(item.price, item.currency)}
-            </span>
+            {item.status === 'sold' || item.hidePrice ? (
+              <span className="inline-flex items-center space-x-1 text-xs font-serif font-bold text-stone-600 uppercase tracking-wider bg-stone-100 px-2.5 py-1 rounded border border-stone-200">
+                <span>Vendido</span>
+                <span className="text-stone-400 font-sans font-normal text-[10px] lowercase">• archivo</span>
+              </span>
+            ) : (
+              <span className="font-serif text-lg sm:text-xl font-bold text-stone-900 tracking-tight">
+                {formatCurrency(item.price, item.currency)}
+              </span>
+            )}
           </div>
 
           {/* Clean minimal action buttons */}
           <div className="flex items-center space-x-1.5">
-            <button
-              id={`card-negotiate-btn-${item.id}`}
-              onClick={() => onOpenNegotiation(item)}
-              title="Mesa de oferta"
-              className="p-2 text-stone-600 hover:text-stone-950 hover:bg-stone-100 rounded transition-colors"
-            >
-              <MessageSquareQuote className="w-4 h-4" />
-            </button>
+            {item.status !== 'sold' && (
+              <button
+                id={`card-negotiate-btn-${item.id}`}
+                onClick={() => onOpenNegotiation(item)}
+                title="Mesa de oferta"
+                className="p-2 text-stone-600 hover:text-stone-950 hover:bg-stone-100 rounded transition-colors cursor-pointer"
+              >
+                <MessageSquareQuote className="w-4 h-4" />
+              </button>
+            )}
 
             <a
               id={`card-whatsapp-btn-${item.id}`}
               href={whatsappInquireUrl}
               target="_blank"
               rel="noopener noreferrer"
-              title="Consultar por WhatsApp"
-              className="px-2.5 py-1.5 bg-[#1f2937] hover:bg-emerald-700 text-white rounded text-xs font-medium transition-colors flex items-center space-x-1 shadow-2xs"
+              title={item.status === 'sold' ? 'Consultar piezas similares por WhatsApp' : 'Consultar por WhatsApp'}
+              className={`px-2.5 py-1.5 text-white rounded text-xs font-medium transition-colors flex items-center space-x-1 shadow-2xs ${
+                item.status === 'sold' 
+                  ? 'bg-stone-700 hover:bg-emerald-700 text-stone-100'
+                  : 'bg-[#1f2937] hover:bg-emerald-700'
+              }`}
             >
               <Phone className="w-3 h-3 text-emerald-300" />
-              <span>Consultar</span>
+              <span>{item.status === 'sold' ? 'Consultar Similares' : 'Consultar'}</span>
             </a>
           </div>
         </div>

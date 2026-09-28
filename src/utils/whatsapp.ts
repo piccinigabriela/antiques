@@ -25,7 +25,14 @@ export function generateItemWhatsAppUrl(item: AntiqueItem, dealer: Dealer, actio
   const cleanPhone = sanitizeWhatsAppNumber(dealer.whatsapp || dealer.phone);
   
   let text = '';
-  if (actionType === 'purchase') {
+  if (item.status === 'sold') {
+    text = `Hola ${dealer.name}, le consulto sobre la pieza del archivo histórico en Articuarios:\n\n` +
+      `🏛️ *${item.title}*\n` +
+      `🔖 *Ref/SKU:* ${item.sku}\n` +
+      `📅 *Época:* ${item.period}\n` +
+      (item.provenance ? `🏛️ *Procedencia:* ${item.provenance}\n` : '') +
+      `\nVeo que la pieza ya fue transferida a colección privada. ¿Disponen o podrían conseguir piezas similares de esta época o estilo para mi colección?`;
+  } else if (actionType === 'purchase') {
     text = `Hola ${dealer.name}, deseo adquirir la siguiente pieza de su catálogo:\n\n` +
       `🏛️ *${item.title}*\n` +
       `🔖 *Ref/SKU:* ${item.sku}\n` +
@@ -38,6 +45,7 @@ export function generateItemWhatsAppUrl(item: AntiqueItem, dealer: Dealer, actio
       `🔖 *Ref/SKU:* ${item.sku}\n` +
       `📅 *Época:* ${item.period}\n` +
       `📍 *Procedencia:* ${item.origin}\n` +
+      (item.provenance ? `🏛️ *Colección:* ${item.provenance}\n` : '') +
       `💰 *Precio:* ${formatCurrency(item.price, item.currency)}\n\n` +
       `¿Podría brindarme más detalles sobre el estado de conservación o coordinar una visita al showroom?`;
   }

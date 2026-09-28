@@ -252,8 +252,14 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
                 onChange={(e) => onFilterChange({ ...filters, onlyAvailable: e.target.checked })}
                 className="rounded text-stone-900 focus:ring-stone-900 w-3.5 h-3.5"
               />
-              <span className="text-stone-800">Solo piezas disponibles para entrega inmediata</span>
+              <span className="text-stone-800 font-medium">Solo piezas disponibles para adquisición</span>
             </label>
+
+            {!filters.onlyAvailable && (
+              <span className="text-[11px] text-amber-900 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                ✓ Mostrando piezas disponibles y archivo de piezas vendidas a colecciones privadas
+              </span>
+            )}
           </div>
         </div>
       )}
