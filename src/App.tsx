@@ -1131,10 +1131,14 @@ export default function App() {
             setDetailItem(null);
             handleFilterByDealer(dealerId);
           }}
-          onDeleteItem={(itemId) => {
-            setDetailItem(null);
-            handleDeleteItem(itemId);
-          }}
+          onDeleteItem={
+            authenticatedDealer && (isAdmin || authenticatedDealer.id === detailItem.dealerId)
+              ? (itemId) => {
+                  setDetailItem(null);
+                  handleDeleteItem(itemId);
+                }
+              : undefined
+          }
         />
       )}
 
