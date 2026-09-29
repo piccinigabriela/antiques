@@ -21,7 +21,7 @@ export function formatCurrency(amount: number, currency: string = 'USD'): string
 /**
  * Generates direct WhatsApp chat URL for item inquiry or purchase
  */
-export function generateItemWhatsAppUrl(item: AntiqueItem, dealer: Dealer, actionType: 'inquire' | 'purchase' = 'inquire'): string {
+export function generateItemWhatsAppUrl(item: AntiqueItem, dealer: Dealer, actionType: 'inquire' | 'purchase' | 'reserve' = 'inquire'): string {
   const cleanPhone = sanitizeWhatsAppNumber(dealer.whatsapp || dealer.phone);
   
   let text = '';
@@ -32,13 +32,20 @@ export function generateItemWhatsAppUrl(item: AntiqueItem, dealer: Dealer, actio
       `📅 *Época:* ${item.period}\n` +
       (item.provenance ? `🏛️ *Procedencia:* ${item.provenance}\n` : '') +
       `\nVeo que la pieza ya fue transferida a colección privada. ¿Disponen o podrían conseguir piezas similares de esta época o estilo para mi colección?`;
+  } else if (actionType === 'reserve') {
+    text = `Hola ${dealer.name}, me gustaría reservar la siguiente pieza de su catálogo:\n\n` +
+      `🏛️ *${item.title}*\n` +
+      `🔖 *Ref/SKU:* ${item.sku}\n` +
+      `📅 *Época:* ${item.period}\n` +
+      `💰 *Valor de lista:* ${formatCurrency(item.price, item.currency)}\n\n` +
+      `Quisiera coordinar el pago de la seña (reserva) y acordar los detalles de retiro o envío. ¿Está disponible?`;
   } else if (actionType === 'purchase') {
     text = `Hola ${dealer.name}, deseo adquirir la siguiente pieza de su catálogo:\n\n` +
       `🏛️ *${item.title}*\n` +
       `🔖 *Ref/SKU:* ${item.sku}\n` +
       `📅 *Época:* ${item.period}\n` +
       `💰 *Valor de lista:* ${formatCurrency(item.price, item.currency)}\n\n` +
-      `¿Sigue disponible para coordinar la forma de entrega y formalizar el cierre? Gracias.`;
+      `¿Sigue disponible para coordinar el pago/seña y la entrega? Gracias.`;
   } else {
     text = `Hola ${dealer.name}, le consulto sobre la pieza de su catálogo:\n\n` +
       `🏛️ *${item.title}*\n` +

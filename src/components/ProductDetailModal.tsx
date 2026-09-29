@@ -34,6 +34,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const eraInfo = classifyItemEra(item.period, item.style);
   const whatsappInquireUrl = generateItemWhatsAppUrl(item, dealer, 'inquire');
   const whatsappPurchaseUrl = generateItemWhatsAppUrl(item, dealer, 'purchase');
+  const whatsappReserveUrl = generateItemWhatsAppUrl(item, dealer, 'reserve');
 
   const handleCopyShare = () => {
     try {
@@ -185,10 +186,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   ))}
                 </div>
               )}
-
-              <p className="text-[11px] text-stone-500 italic text-center sm:text-left">
-                * Las fotografías son tomas periciales bajo iluminación neutra para documentar la pátina real y estado del objeto.
-              </p>
             </div>
 
             {/* Price & Purchase / WhatsApp Block */}
@@ -291,29 +288,28 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   ) : (
                     /* CTAs for active items */
                     <>
-                      {/* Primary: Reservation with official Payoneer / USD Custody */}
-                      {item.status === 'available' && onOpenReservation && (
-                        <button
-                          id="modal-reserve-deposit-btn"
-                          type="button"
-                          onClick={() => onOpenReservation(item)}
-                          className="w-full py-3 px-4 bg-[#b45309] hover:bg-[#92400e] text-white rounded-md text-sm font-semibold transition-all flex items-center justify-center space-x-2 shadow-sm group cursor-pointer"
-                        >
-                          <ShieldCheck className="w-4 h-4 text-amber-200" />
-                          <span>Reservar Pieza (Seña del 10% en Custodia)</span>
-                        </button>
-                      )}
-
-                      {/* WhatsApp Purchase / Direct Contact */}
+                      {/* Primary: Reservation & Seña via WhatsApp */}
                       <a
-                        id="modal-whatsapp-acquire-btn"
-                        href={whatsappPurchaseUrl}
+                        id="modal-whatsapp-reserve-btn"
+                        href={whatsappReserveUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full py-2.5 px-4 bg-stone-900 hover:bg-emerald-700 text-white rounded-md text-sm font-medium transition-all flex items-center justify-center space-x-2 shadow-xs group"
+                        className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-md text-sm font-semibold transition-all flex items-center justify-center space-x-2 shadow-sm group"
                       >
-                        <Phone className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                        <span>Contactar Galería por WhatsApp</span>
+                        <Phone className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform" />
+                        <span>Coordinar Seña / Reserva por WhatsApp</span>
+                      </a>
+
+                      {/* WhatsApp Inquiry / General Details */}
+                      <a
+                        id="modal-whatsapp-inquire-btn"
+                        href={whatsappInquireUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2.5 px-4 bg-stone-900 hover:bg-stone-800 text-white rounded-md text-sm font-medium transition-all flex items-center justify-center space-x-2 shadow-xs group"
+                      >
+                        <Phone className="w-4 h-4 text-stone-300" />
+                        <span>Consultar Detalles o Visitar Showroom</span>
                       </a>
 
                       {/* Negotiation CTA */}
@@ -337,10 +333,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <div className="mt-4 pt-3 border-t border-[#eee5d8] text-[11px] text-stone-500 space-y-1">
                     <div className="flex items-center space-x-1.5 font-medium text-stone-700">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Custodia Articuarios Protegida (Payoneer Oficial • USDT • Wire USD)</span>
+                      <span>Atención Directa y Personalizada</span>
                     </div>
-                    <p className="text-[10px] text-stone-400">
-                      La seña congela la exclusividad por 72 hs. El 90% restante se liquida de forma privada con la galería al momento del retiro o inspección física.
+                    <p className="text-[10px] text-stone-500 leading-relaxed">
+                      La reserva, seña, medios de pago (transferencia, Payoneer, efectivo) y coordinación de flete o retiro se acuerdan directamente con la galería por WhatsApp.
                     </p>
                   </div>
                 )}
@@ -640,13 +636,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               Hacer Oferta
             </button>
             <a
-              href={whatsappPurchaseUrl}
+              href={whatsappReserveUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 sm:flex-initial py-2 px-5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded transition-colors flex items-center justify-center space-x-1.5 shadow-xs"
             >
               <Phone className="w-4 h-4" />
-              <span>Consultar en WhatsApp</span>
+              <span>Reservar por WhatsApp</span>
             </a>
           </div>
         </div>
