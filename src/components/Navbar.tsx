@@ -52,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center space-x-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="font-light tracking-wide text-stone-200">
-              Colección de Alta Antigüedad • Base Cloud Sincronizada en Vivo
+              Alta Antigüedad, Diseño Vintage Siglo XX & Coleccionismo • Buenos Aires
             </span>
           </div>
           <div className="hidden sm:flex items-center space-x-4 text-[11px] text-stone-300">

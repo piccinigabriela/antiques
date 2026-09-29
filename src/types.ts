@@ -9,7 +9,7 @@ export type CategoryType =
   | 'Libros y Manuscritos'
   | 'Objetos de Colección';
 
-export type ItemStatus = 'available' | 'in_negotiation' | 'reserved' | 'sold';
+export type ItemStatus = 'available' | 'in_negotiation' | 'reserved' | 'sold' | 'hidden';
 
 export type ConservationState =
   | 'Excelente (sin restauraciones)'
@@ -55,6 +55,7 @@ export interface AntiqueItem {
   location?: string; // e.g. "CABA (Capital Federal)", "San Fernando, Prov. Bs. As.", "Tigre", "Mendoza"
   provenance?: string; // e.g. "Colección privada de la familia...", "Colección particular", etc.
   hidePrice?: boolean; // explicitly hide price for archive or high-prestige pieces
+  isHidden?: boolean; // toggle to hide product from public catalog without deleting it
   featured?: boolean;
   createdAt: string;
 }
@@ -114,6 +115,7 @@ export interface CatalogFilterState {
   style: string;
   dealerId: string;
   location?: string;
+  eraType?: 'all' | 'antique' | 'vintage';
   condition: string;
   onlyCertified: boolean;
   onlyAvailable: boolean;

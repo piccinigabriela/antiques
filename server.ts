@@ -97,9 +97,9 @@ async function fetchCurrentItems(): Promise<AntiqueItem[]> {
 
 // Generate RSS 2.0 / Google Merchant / Pinterest XML Feed
 function generatePinterestXml(items: AntiqueItem[], baseUrl: string): string {
-  const channelTitle = "Articuarios • Alta Antigüedad & Piezas Históricas";
+  const channelTitle = "Articuarios • Alta Antigüedad & Diseño Vintage";
   const channelLink = baseUrl;
-  const channelDesc = "Catálogo peritado de alta antigüedad, mobiliario de época, platería, porcelana y obras históricas en Buenos Aires.";
+  const channelDesc = "Catálogo curado de alta antigüedad (+100 años), diseño vintage, mobiliario Mid-Century y piezas históricas en Buenos Aires.";
 
   const itemsXml = items
     .map((item) => {
@@ -219,8 +219,9 @@ app.get("/pinterest-7108a073dcf7a7f7246d2952efcf4e0a.html", (_req, res) => {
 app.get(["/api/pinterest-feed.xml", "/api/pinterest-feed.rss", "/pinterest-feed.xml"], async (req, res) => {
   try {
     const items = await fetchCurrentItems();
+    const visibleItems = items.filter((item) => !item.isHidden && item.status !== "hidden");
     const baseUrl = getBaseUrl(req);
-    const xml = generatePinterestXml(items, baseUrl);
+    const xml = generatePinterestXml(visibleItems, baseUrl);
 
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=180, s-maxage=300");
@@ -235,8 +236,9 @@ app.get(["/api/pinterest-feed.xml", "/api/pinterest-feed.rss", "/pinterest-feed.
 app.get(["/api/pinterest-catalog.csv", "/pinterest-catalog.csv"], async (req, res) => {
   try {
     const items = await fetchCurrentItems();
+    const visibleItems = items.filter((item) => !item.isHidden && item.status !== "hidden");
     const baseUrl = getBaseUrl(req);
-    const csv = generatePinterestCsv(items, baseUrl);
+    const csv = generatePinterestCsv(visibleItems, baseUrl);
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader("Content-Disposition", 'inline; filename="pinterest-catalog.csv"');
@@ -351,7 +353,7 @@ app.post("/api/ai/analyze-antique", async (req, res) => {
     const ai = getGeminiClient();
 
     const prompt = `Actúa como un eminente perito tasador, conservador de arte y bibliófilo colegiado, con amplia experiencia en casas de subastas internacionales (Sotheby's, Christie's, Drouot).
-Se te proporcionan ${imageParts.length} fotografía(s) correspondientes a una misma antigüedad, libro histórico o pieza de colección para su catalogación oficial en 'Anticuarios & Co.'.
+Se te proporcionan ${imageParts.length} fotografía(s) correspondientes a una misma antigüedad (+100 años), pieza de diseño vintage / siglo XX (1920-1980), libro histórico u objeto de colección para su catalogación oficial en 'Articuarios'.
 
 SI SE TRATA DE UN LIBRO, MANUSCRITO O DOCUMENTO HISTÓRICO:
 - Analiza conjuntamente todas las imágenes disponibles:
@@ -360,11 +362,11 @@ SI SE TRATA DE UN LIBRO, MANUSCRITO O DOCUMENTO HISTÓRICO:
   3. Encuadernación, lomo y tapas: identifica el tipo de encuadernación (ej: piel de época con nervios, marroquí, pergamino a la romana, tela editorial, holandesa con puntas, dorados al hierro o al fuego, cantos jaspeados o dorados).
   4. Páginas interiores, láminas o grabados: identifica técnicas gráficas (aguafuertes, xilografías, litografías) y el estado del papel (papel de hilo verjurado, manchas de humedad, moteado de óxido/foxing, ex-libris o anotaciones manuscritas).
 
-SI SE TRATA DE UN MUEBLE, ESCULTURA, RELOJERÍA U OBJETO DE ARTE:
-- Analiza vista general, ensambles, pátina, sellos, marcas de ebanista, punzones de orfebrería o herrajes.
+SI SE TRATA DE UN MUEBLE, ESCULTURA, RELOJERÍA, LUMINARIA U OBJETO DE ARTE (ANTIGUO O VINTAGE):
+- Analiza vista general, ensambles, pátina, sellos, marcas de ebanista o diseñador (ej: Ruhlmann, Omersa, Eames, Bertoia), punzones de orfebrería o herrajes.
 
 Determina con precisión los siguientes campos:
-1. title: Título formal de catalogación (ej: para libro: "Cervantes Saavedra, Miguel de - Don Quijote de la Mancha (Edición ilustrada por Gustavo Doré, Barcelona 1880)", o para mueble: "Cómoda Bombé de Época Luis XV...").
+1. title: Título formal de catalogación (ej: para libro: "Cervantes Saavedra, Miguel de - Don Quijote de la Mancha (Edición ilustrada por Gustavo Doré, Barcelona 1880)", para mueble antiguo: "Cómoda Bombé de Época Luis XV...", o para vintage: "Par de Sillones Art Déco en Ébano de Macasar" o "Rinoceronte Reposapiés en Cuero por Dimitri Omersa para Abercrombie & Fitch").
 2. category: Selecciona exactamente una de las siguientes opciones:
    - "Libros y Manuscritos"
    - "Muebles"
@@ -375,9 +377,9 @@ Determina con precisión los siguientes campos:
    - "Cerámica y Porcelana"
    - "Esculturas y Bronces"
    - "Objetos de Colección"
-3. period: Época y datación histórica aproximada o exacta (ej: "Siglo XIX (1880)", o "Siglo XVIII (ca. 1765-1775)").
-4. origin: Región, ciudad o imprenta/taller de procedencia (ej: "España (Barcelona, Montaner y Simón)", o "Francia (París)").
-5. style: Estilo artístico, tipográfico o tipo de edición (ej: "Edición Romántica / Grabados en Madera al Boj", o "Rococó Francés Luis XV").
+3. period: Época y datación histórica aproximada o exacta (ej: "Siglo XIX (1880)", "Siglo XVIII (ca. 1765)", "Art Déco (ca. 1930)", "Mid-Century Modern (ca. 1960)", o "Vintage Siglo XX (ca. 1970)").
+4. origin: Región, ciudad o imprenta/taller de procedencia (ej: "España (Barcelona, Montaner y Simón)", "Francia (París)", "Inglaterra (Londres)").
+5. style: Estilo artístico, tipográfico o movimiento de diseño (ej: "Edición Romántica", "Rococó Francés Luis XV", "Mid-Century Modernista", "Art Déco Francés", "Space Age 1970s").
 6. materials: Lista de materiales detectados (ej: para libro: ["Papel de hilo verjurado", "Piel de época con nervios", "Dorados al hierro", "Láminas en calcografía"]; para mueble: ["Palisandro", "Nogal", "Bronce dorado"]).
 7. estimatedDimensions: Alto, ancho y profundidad estimados en centímetros proporcionales a este tipo de pieza o formato bibliográfico (In-folio, In-4to, In-8vo), junto con su peso estimado (ej: "3.2 kg" o "32 kg").
 8. condition: Debe ser exactamente una de estas cuatro opciones:

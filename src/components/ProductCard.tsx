@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Award, MessageSquareQuote, Phone, Heart, ArrowUpRight, MapPin, Layers } from 'lucide-react';
+import { Award, MessageSquareQuote, Phone, Heart, ArrowUpRight, MapPin, Layers, Sparkles } from 'lucide-react';
 import { AntiqueItem, Dealer } from '../types';
 import { formatCurrency, generateItemWhatsAppUrl } from '../utils/whatsapp';
+import { classifyItemEra } from '../utils/eraClassifier';
 
 interface ProductCardProps {
   item: AntiqueItem;
@@ -18,6 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [isSaved, setIsSaved] = useState(false);
   const whatsappInquireUrl = generateItemWhatsAppUrl(item, dealer, 'inquire');
+  const eraInfo = classifyItemEra(item.period, item.style);
 
   const statusLabels: Record<string, { label: string; class: string }> = {
     available: { label: '', class: '' },
@@ -71,11 +73,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Certificate Badge: minimal, discreet */}
-        {item.certificate.hasCertificate && !statusConfig.label && (
-          <div className="absolute top-2.5 left-2.5 bg-white/95 backdrop-blur-xs border border-amber-300 text-amber-900 px-2 py-0.5 rounded text-[10px] font-medium flex items-center space-x-1 shadow-2xs">
-            <Award className="w-3 h-3 text-amber-600" />
-            <span className="font-serif">Certificado</span>
+        {/* Era Tag (Vintage vs Antigüedad) / Certificate Badge */}
+        {!statusConfig.label && (
+          <div className="absolute top-2.5 left-2.5 flex items-center space-x-1.5">
+            {item.certificate.hasCertificate && (
+              <div className="bg-white/95 backdrop-blur-xs border border-amber-300 text-amber-900 px-2 py-0.5 rounded text-[10px] font-medium flex items-center space-x-1 shadow-2xs">
+                <Award className="w-3 h-3 text-amber-600" />
+                <span className="font-serif">Certificado</span>
+              </div>
+            )}
+            <span className={`px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider font-semibold border backdrop-blur-xs ${eraInfo.badgeClass}`}>
+              {eraInfo.shortLabel}
+            </span>
           </div>
         )}
 
@@ -103,8 +112,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
         <div>
           {/* Subtle Period & Origin label */}
-          <div className="text-[11px] uppercase tracking-wider text-stone-400 font-medium truncate">
-            {item.period} • {item.origin}
+          <div className="text-[11px] uppercase tracking-wider text-stone-400 font-medium truncate flex items-center space-x-1">
+            <span className="truncate">{item.period} • {item.origin}</span>
           </div>
 
           {/* Title in elegant serif */}

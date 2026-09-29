@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Award, ShieldCheck, MapPin, Phone, MessageSquareQuote, CheckCircle2, AlertCircle, Share2, Truck, Sparkles, Trash2, Instagram, Landmark } from 'lucide-react';
+import { X, Award, ShieldCheck, MapPin, Phone, MessageSquareQuote, CheckCircle2, AlertCircle, Share2, Truck, Sparkles, Trash2, Instagram, Landmark, Eye, EyeOff } from 'lucide-react';
 import { AntiqueItem, Dealer } from '../types';
 import { formatCurrency, generateItemWhatsAppUrl } from '../utils/whatsapp';
+import { classifyItemEra } from '../utils/eraClassifier';
 
 interface ProductDetailModalProps {
   item: AntiqueItem | null;
@@ -11,6 +12,7 @@ interface ProductDetailModalProps {
   onFilterByDealer: (dealerId: string) => void;
   onOpenReservation?: (item: AntiqueItem) => void;
   onDeleteItem?: (itemId: string) => void;
+  onToggleHideItem?: (itemId: string) => void;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -21,6 +23,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onFilterByDealer,
   onOpenReservation,
   onDeleteItem,
+  onToggleHideItem,
 }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -28,6 +31,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   if (!item || !dealer) return null;
 
+  const eraInfo = classifyItemEra(item.period, item.style);
   const whatsappInquireUrl = generateItemWhatsAppUrl(item, dealer, 'inquire');
   const whatsappPurchaseUrl = generateItemWhatsAppUrl(item, dealer, 'purchase');
 
@@ -54,6 +58,30 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           <div className="flex items-center space-x-2">
+            {onToggleHideItem && (
+              <button
+                type="button"
+                onClick={() => onToggleHideItem(item.id)}
+                className={`p-1.5 rounded-md transition-colors text-xs flex items-center space-x-1 cursor-pointer ${
+                  item.isHidden || item.status === 'hidden'
+                    ? 'text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300'
+                    : 'text-stone-500 hover:text-stone-800 hover:bg-stone-200/60'
+                }`}
+                title={item.isHidden || item.status === 'hidden' ? 'Hacer visible en catálogo público' : 'Ocultar esta pieza del catálogo'}
+              >
+                {item.isHidden || item.status === 'hidden' ? (
+                  <>
+                    <EyeOff className="w-4 h-4 text-amber-800" />
+                    <span className="hidden sm:inline font-bold">Oculto</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    <span className="hidden sm:inline">Ocultar</span>
+                  </>
+                )}
+              </button>
+            )}
             {onDeleteItem && (
               <button
                 type="button"
@@ -82,6 +110,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Banner de Producto Oculto (Si está oculto) */}
+        {(item.isHidden || item.status === 'hidden') && (
+          <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-amber-950 font-medium shrink-0">
+            <div className="flex items-center space-x-2">
+              <EyeOff className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>Esta pieza está actualmente <strong>OCULTA del catálogo público</strong> (No visible para compradores ni búsquedas).</span>
+            </div>
+            {onToggleHideItem && (
+              <button
+                type="button"
+                onClick={() => onToggleHideItem(item.id)}
+                className="px-2.5 py-1 bg-amber-800 hover:bg-amber-900 text-white rounded text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer shadow-xs"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Hacer Visible en Catálogo</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Modal Scrollable Body */}
         <div className="overflow-y-auto p-6 space-y-8 flex-1">
@@ -140,9 +188,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="lg:col-span-5 flex flex-col justify-between bg-[#fbf9f5] border border-[#e8dfd3] rounded-lg p-6">
               <div>
                 <div className="flex items-center justify-between text-xs text-stone-500 mb-2">
-                  <span className="uppercase tracking-wider font-semibold text-[#8c7853]">
-                    {item.category}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="uppercase tracking-wider font-semibold text-[#8c7853]">
+                      {item.category}
+                    </span>
+                    <span>•</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold border ${eraInfo.badgeClass}`}>
+                      {eraInfo.label}
+                    </span>
+                  </div>
                   <span className="font-mono">REF: {item.sku}</span>
                 </div>
 

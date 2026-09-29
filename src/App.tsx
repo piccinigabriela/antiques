@@ -51,6 +51,7 @@ import { LogoModal } from './components/LogoModal';
 import { PinterestCatalogModal } from './components/PinterestCatalogModal';
 import { BlogArticle } from './types';
 import { INITIAL_ARTICLES, getStoredArticles, saveStoredArticles } from './data/blogArticles';
+import { classifyItemEra } from './utils/eraClassifier';
 import { ShieldCheck, Phone, Award, Compass, MessageSquareQuote, ChevronRight, ChevronLeft, PlusCircle, Edit3, Heart, ArrowRight, Trash2, Info, AlertCircle, BookOpen, Sparkles, Instagram } from 'lucide-react';
 
 export default function App() {
@@ -63,7 +64,6 @@ export default function App() {
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [isArticleFormOpen, setIsArticleFormOpen] = useState(false);
   const [articleToEdit, setArticleToEdit] = useState<BlogArticle | null>(null);
-  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Dealer Authentication state
   const [authenticatedDealer, setAuthenticatedDealer] = useState<Dealer | null>(() => {
@@ -250,6 +250,11 @@ export default function App() {
   // Filtered and sorted catalog items
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      // Never show hidden items in public catalog or search
+      if (item.isHidden || item.status === 'hidden') {
+        return false;
+      }
+
       // Search
       if (filters.searchTerm) {
         const query = filters.searchTerm.toLowerCase();
@@ -288,6 +293,14 @@ export default function App() {
       if (filters.location) {
         const itemLoc = item.location || dealers.find((d) => d.id === item.dealerId)?.city?.split(',')[0];
         if (itemLoc !== filters.location) {
+          return false;
+        }
+      }
+
+      // Era Type (Antique >100 years vs Vintage & 20th Century)
+      if (filters.eraType && filters.eraType !== 'all') {
+        const era = classifyItemEra(item.period, item.style);
+        if (era.type !== filters.eraType) {
           return false;
         }
       }
@@ -358,17 +371,45 @@ export default function App() {
   const handleChangeItemStatus = async (itemId: string, status: AntiqueItem['status']) => {
     const updated = items.find((it) => it.id === itemId);
     if (updated) {
-      const modified = { ...updated, status };
+      const isHidden = status === 'hidden' ? true : (status === 'available' && updated.isHidden ? false : updated.isHidden);
+      const modified: AntiqueItem = { ...updated, status, isHidden };
       setItems((prev) => {
         const nextItems = prev.map((it) => (it.id === itemId ? modified : it));
         saveStoredItems(nextItems);
         return nextItems;
       });
+      if (detailItem && detailItem.id === itemId) {
+        setDetailItem(modified);
+      }
       try {
         await saveItemToFirestore(modified);
       } catch (e) {
         console.warn('Error updating status in cloud firestore:', e);
       }
+    }
+  };
+
+  const handleToggleHideItem = async (itemId: string) => {
+    const item = items.find((it) => it.id === itemId);
+    if (!item) return;
+    const isNowHidden = !(item.isHidden || item.status === 'hidden');
+    const modified: AntiqueItem = {
+      ...item,
+      isHidden: isNowHidden,
+      status: isNowHidden && item.status === 'available' ? 'hidden' : (!isNowHidden && item.status === 'hidden' ? 'available' : item.status),
+    };
+    setItems((prev) => {
+      const nextItems = prev.map((it) => (it.id === itemId ? modified : it));
+      saveStoredItems(nextItems);
+      return nextItems;
+    });
+    if (detailItem && detailItem.id === itemId) {
+      setDetailItem(modified);
+    }
+    try {
+      await saveItemToFirestore(modified);
+    } catch (e) {
+      console.warn('Error updating hidden status in cloud firestore:', e);
     }
   };
 
@@ -662,14 +703,6 @@ export default function App() {
         {/* VIEW 1: CATALOGO GENERAL */}
         {currentView === 'catalog' && (() => {
           const selectedFilterDealer = filters.dealerId ? dealers.find((d) => d.id === filters.dealerId) : null;
-          const noveltyItems = items.slice(0, 8);
-
-          const scrollCarousel = (direction: 'left' | 'right') => {
-            if (carouselRef.current) {
-              const offset = direction === 'left' ? -340 : 340;
-              carouselRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-            }
-          };
 
           return (
             <div className="space-y-6 sm:space-y-8 animate-fadeIn">
@@ -739,119 +772,7 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              ) : !filters.searchTerm && !filters.category && (
-                /* 1stdibs Novelty Section: "Consulta las novedades" */
-                <div className="pt-1 pb-4">
-                  <div className="flex flex-col md:flex-row items-stretch gap-4">
-                    {/* Left teaser block */}
-                    <div className="w-full md:w-56 shrink-0 p-5 sm:p-6 bg-white border border-[#e8e2d8] rounded-sm flex flex-col justify-between shadow-2xs">
-                      <div>
-                        <h2 className="font-serif text-2xl sm:text-3xl text-stone-950 font-normal leading-snug">
-                          Ingresos &<br className="hidden md:inline" /> Curaduría
-                        </h2>
-                        <button
-                          onClick={() => {
-                            setFilters((prev) => ({ ...prev, category: '', searchTerm: '', dealerId: '', sortBy: 'newest' }));
-                            const gridEl = document.getElementById('catalog-grid-anchor');
-                            if (gridEl) {
-                              gridEl.scrollIntoView({ behavior: 'smooth' });
-                            }
-                          }}
-                          className="text-xs text-stone-600 hover:text-stone-950 underline underline-offset-4 mt-3 sm:mt-4 block font-medium tracking-wide transition-colors cursor-pointer"
-                        >
-                          Ver catálogo completo →
-                        </button>
-                      </div>
-
-                      <div className="flex items-center space-x-2 mt-6">
-                        <button
-                          type="button"
-                          onClick={() => scrollCarousel('left')}
-                          className="w-8 h-8 rounded-full border border-stone-300 hover:border-stone-800 flex items-center justify-center text-stone-700 hover:text-stone-950 transition-colors cursor-pointer"
-                          aria-label="Anterior"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => scrollCarousel('right')}
-                          className="w-8 h-8 rounded-full border border-stone-300 hover:border-stone-800 flex items-center justify-center text-stone-700 hover:text-stone-950 transition-colors cursor-pointer"
-                          aria-label="Siguiente"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Right horizontal scrollable list of new arrivals */}
-                    <div 
-                      ref={carouselRef}
-                      className="flex-1 flex space-x-4 overflow-x-auto scrollbar-none pb-2 pt-0.5 scroll-smooth"
-                    >
-                      {noveltyItems.map((item) => {
-                        const dealer = dealers.find((d) => d.id === item.dealerId);
-                        return (
-                          <div
-                            key={`novelty-${item.id}`}
-                            onClick={() => setDetailItem(item)}
-                            className="w-56 sm:w-64 shrink-0 bg-white border border-[#e8e2d8] rounded-sm overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
-                          >
-                            <div className="relative aspect-square bg-[#fbfaf8] overflow-hidden flex items-center justify-center">
-                              <img
-                                src={item.images?.[0] || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800'}
-                                alt={item.title}
-                                referrerPolicy="no-referrer"
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              {item.status === 'sold' && (
-                                <div className="absolute top-2.5 left-2.5">
-                                  <span className="px-2 py-0.5 bg-stone-900/90 text-white text-[9px] uppercase tracking-wider font-semibold rounded-xs backdrop-blur-xs font-serif">
-                                    Vendido
-                                  </span>
-                                </div>
-                              )}
-                              {item.provenance && item.status !== 'sold' && (
-                                <div className="absolute top-2.5 left-2.5">
-                                  <span className="px-2 py-0.5 bg-amber-950/85 text-amber-100 text-[9px] uppercase tracking-wider font-serif rounded-xs backdrop-blur-xs">
-                                    Colección Privada
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-3.5 flex-1 flex flex-col justify-between">
-                              <div>
-                                <span className="text-[10px] uppercase tracking-wider text-stone-400 font-medium block truncate">
-                                  {dealer?.name || 'Anticuario Colegiado'}
-                                </span>
-                                <h3 className="font-serif text-xs sm:text-sm text-stone-900 group-hover:text-amber-800 transition-colors line-clamp-1 mt-0.5">
-                                  {item.title}
-                                </h3>
-                                <p className="text-[11px] text-stone-500 font-light mt-0.5 truncate">
-                                  {item.period} • {item.style}
-                                </p>
-                              </div>
-                              <div className="mt-2 pt-2 border-t border-[#f0eae1] flex items-center justify-between">
-                                {item.status === 'sold' || item.hidePrice ? (
-                                  <span className="text-[11px] font-serif font-bold text-stone-600 uppercase tracking-wider">
-                                    Vendido • Archivo
-                                  </span>
-                                ) : (
-                                  <span className="text-xs sm:text-sm font-semibold text-stone-950 font-mono">
-                                    USD ${item.price.toLocaleString('es-AR')}
-                                  </span>
-                                )}
-                                <span className="text-[10px] text-stone-400 group-hover:text-stone-900 transition-colors">
-                                  Ver ficha →
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
+              ) : null}
 
               {/* Editorial Magazine Highlight Banner (El Cuaderno) */}
               {!filters.category && !filters.searchTerm && !filters.dealerId && articles.length > 0 && (
@@ -1092,6 +1013,7 @@ export default function App() {
             }}
             onDeleteItem={handleDeleteItem}
             onChangeItemStatus={handleChangeItemStatus}
+            onToggleHideItem={handleToggleHideItem}
             onViewItemDetails={(item) => setDetailItem(item)}
             onUpdateOffer={handleSaveOffer}
             onUpdateDealer={handleUpdateDealer}
@@ -1131,6 +1053,13 @@ export default function App() {
             setDetailItem(null);
             handleFilterByDealer(dealerId);
           }}
+          onToggleHideItem={
+            authenticatedDealer && (isAdmin || authenticatedDealer.id === detailItem.dealerId)
+              ? (itemId) => {
+                  handleToggleHideItem(itemId);
+                }
+              : undefined
+          }
           onDeleteItem={
             authenticatedDealer && (isAdmin || authenticatedDealer.id === detailItem.dealerId)
               ? (itemId) => {

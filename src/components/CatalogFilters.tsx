@@ -33,6 +33,7 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
       style: '',
       dealerId: '',
       location: '',
+      eraType: 'all',
       condition: '',
       onlyCertified: false,
       onlyAvailable: true,
@@ -49,16 +50,17 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
     Boolean(filters.style),
     Boolean(filters.dealerId),
     Boolean(filters.location),
+    Boolean(filters.eraType && filters.eraType !== 'all'),
     Boolean(filters.onlyCertified),
     Boolean(filters.maxPrice),
   ].filter(Boolean).length;
 
   return (
     <div className="bg-white border border-[#e8e2d8] rounded-sm shadow-2xs">
-      {/* Sleek Bar: Quick Search, Filter Toggle, Sort & Total */}
+      {/* Sleek Bar: Quick Search, Era Selector, Filter Toggle, Sort & Total */}
       <div className="p-3 sm:p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Search input (1stdibs pill style) */}
-        <div className="relative flex-1 max-w-lg">
+        <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-2.5" />
           <input
             id="catalog-search-input"
@@ -70,13 +72,52 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
           />
         </div>
 
+        {/* Quick Era Pill Switcher: Todo / Antigüedad / Vintage */}
+        <div className="flex items-center bg-[#f5f1ea] p-0.5 rounded-full border border-[#e5ded2] text-[11px] font-medium shrink-0 self-start md:self-auto">
+          <button
+            type="button"
+            onClick={() => onFilterChange({ ...filters, eraType: 'all' })}
+            className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+              !filters.eraType || filters.eraType === 'all'
+                ? 'bg-white text-stone-900 shadow-2xs font-semibold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+          >
+            Todo
+          </button>
+          <button
+            type="button"
+            onClick={() => onFilterChange({ ...filters, eraType: 'antique' })}
+            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center space-x-1 ${
+              filters.eraType === 'antique'
+                ? 'bg-amber-950 text-amber-100 shadow-2xs font-semibold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+            title="Piezas históricas de más de 100 años (Siglo XIX y anteriores)"
+          >
+            <span>Antigüedad (+100 años)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onFilterChange({ ...filters, eraType: 'vintage' })}
+            className={`px-3 py-1 rounded-full transition-all cursor-pointer flex items-center space-x-1 ${
+              filters.eraType === 'vintage'
+                ? 'bg-stone-900 text-amber-200 shadow-2xs font-semibold'
+                : 'text-stone-600 hover:text-stone-900'
+            }`}
+            title="Diseño de autor, Art Déco y Mid-Century (1920–1980)"
+          >
+            <span>Vintage & Siglo XX</span>
+          </button>
+        </div>
+
         {/* Controls: Filter Button, Sort Dropdown & Count */}
         <div className="flex items-center justify-between md:justify-end gap-2.5">
           {/* Toggle Advanced Filters */}
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border flex items-center space-x-1.5 transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border flex items-center space-x-1.5 transition-colors cursor-pointer ${
               isExpanded || activeFiltersCount > 0
                 ? 'bg-stone-900 text-white border-stone-900'
                 : 'bg-[#fbf9f6] text-stone-700 border-[#ded6c9] hover:bg-stone-100'
@@ -91,7 +132,7 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
           {activeFiltersCount > 0 && (
             <button
               onClick={handleReset}
-              className="text-xs text-stone-500 hover:text-stone-900 flex items-center space-x-1 px-1.5 py-1 transition-colors"
+              className="text-xs text-stone-500 hover:text-stone-900 flex items-center space-x-1 px-1.5 py-1 transition-colors cursor-pointer"
               title="Restablecer filtros"
             >
               <RotateCcw className="w-3 h-3" />

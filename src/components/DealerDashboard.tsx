@@ -8,7 +8,8 @@ import {
   CheckCircle, 
   Edit3, 
   Trash2, 
-  Eye, 
+  Eye,
+  EyeOff,
   DollarSign, 
   AlertCircle,
   Building2,
@@ -43,6 +44,7 @@ interface DealerDashboardProps {
   onEditItem: (item: AntiqueItem) => void;
   onDeleteItem: (itemId: string) => void;
   onChangeItemStatus: (itemId: string, status: AntiqueItem['status']) => void;
+  onToggleHideItem?: (itemId: string) => void;
   onViewItemDetails: (item: AntiqueItem) => void;
   onUpdateOffer: (offer: NegotiationOffer) => void;
   onUpdateDealer: (dealer: Dealer) => void;
@@ -63,6 +65,7 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
   onEditItem,
   onDeleteItem,
   onChangeItemStatus,
+  onToggleHideItem,
   onViewItemDetails,
   onUpdateOffer,
   onUpdateDealer,
@@ -136,12 +139,27 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
 
   // Filter items for this dealer
   const dealerItems = items.filter((it) => it.dealerId === activeDealer.id);
+  const hiddenItemsCount = dealerItems.filter((it) => it.isHidden || it.status === 'hidden').length;
+  const visibleItemsCount = dealerItems.filter((it) => !it.isHidden && it.status !== 'hidden').length;
+
   const filteredItems = dealerItems.filter((it) => {
     const matchesSearch =
       it.title.toLowerCase().includes(inventorySearch.toLowerCase()) ||
       it.sku.toLowerCase().includes(inventorySearch.toLowerCase()) ||
-      it.period.toLowerCase().includes(inventorySearch.toLowerCase());
-    const matchesStatus = statusFilter === 'all' ? true : it.status === statusFilter;
+      it.period.toLowerCase().includes(inventorySearch.toLowerCase()) ||
+      (it.provenance && it.provenance.toLowerCase().includes(inventorySearch.toLowerCase()));
+    
+    let matchesStatus = true;
+    if (statusFilter === 'all') {
+      matchesStatus = true;
+    } else if (statusFilter === 'hidden') {
+      matchesStatus = it.isHidden === true || it.status === 'hidden';
+    } else if (statusFilter === 'visible') {
+      matchesStatus = !it.isHidden && it.status !== 'hidden';
+    } else {
+      matchesStatus = it.status === statusFilter;
+    }
+
     return matchesSearch && matchesStatus;
   });
 
@@ -546,14 +564,28 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="py-2 px-2.5 bg-[#faf8f5] border border-stone-300 rounded-md text-xs text-stone-800"
+                className="py-2 px-2.5 bg-[#faf8f5] border border-stone-300 rounded-md text-xs text-stone-800 font-medium"
               >
-                <option value="all">Todos los estados</option>
-                <option value="available">Disponible</option>
+                <option value="all">Todos los estados ({dealerItems.length})</option>
+                <option value="visible">👁️ Visibles en catálogo ({visibleItemsCount})</option>
+                <option value="hidden">🙈 Ocultos del público ({hiddenItemsCount})</option>
+                <option value="available">Disponibles</option>
                 <option value="in_negotiation">En Negociación</option>
-                <option value="reserved">Reservado</option>
-                <option value="sold">Vendido</option>
+                <option value="reserved">Reservados</option>
+                <option value="sold">Vendidos (Archivo)</option>
               </select>
+
+              {hiddenItemsCount > 0 && statusFilter !== 'hidden' && (
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('hidden')}
+                  className="hidden md:inline-flex items-center space-x-1 px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-xs font-semibold transition-colors"
+                  title="Ver solo productos ocultos"
+                >
+                  <EyeOff className="w-3.5 h-3.5 text-amber-700" />
+                  <span>{hiddenItemsCount} {hiddenItemsCount === 1 ? 'oculto' : 'ocultos'}</span>
+                </button>
+              )}
             </div>
 
             <button
@@ -669,33 +701,72 @@ export const DealerDashboard: React.FC<DealerDashboardProps> = ({
                           )}
                         </td>
 
-                        {/* Status Select */}
+                        {/* Status Select & Visibility Pill */}
                         <td className="py-3.5 px-4">
-                          <select
-                            value={item.status}
-                            onChange={(e) =>
-                              onChangeItemStatus(item.id, e.target.value as AntiqueItem['status'])
-                            }
-                            className={`py-1 px-2 rounded text-xs font-semibold border ${
-                              item.status === 'available'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : item.status === 'in_negotiation'
-                                ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                : item.status === 'reserved'
-                                ? 'bg-stone-100 text-stone-700 border-stone-300'
-                                : 'bg-stone-200 text-stone-800 border-stone-400'
-                            }`}
-                          >
-                            <option value="available">Disponible</option>
-                            <option value="in_negotiation">En Negociación</option>
-                            <option value="reserved">Reservado</option>
-                            <option value="sold">Vendido (Archivo)</option>
-                          </select>
+                          <div className="space-y-1.5">
+                            {item.isHidden || item.status === 'hidden' ? (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded text-[10px] font-bold">
+                                <EyeOff className="w-2.5 h-2.5 text-amber-700" />
+                                <span>Oculto al público</span>
+                              </span>
+                            ) : null}
+                            
+                            <select
+                              value={item.status}
+                              onChange={(e) =>
+                                onChangeItemStatus(item.id, e.target.value as AntiqueItem['status'])
+                              }
+                              className={`py-1 px-2 rounded text-xs font-semibold border block w-full max-w-[150px] ${
+                                item.isHidden || item.status === 'hidden'
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                  : item.status === 'available'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                  : item.status === 'in_negotiation'
+                                  ? 'bg-amber-50 text-amber-800 border-amber-300'
+                                  : item.status === 'reserved'
+                                  ? 'bg-stone-100 text-stone-700 border-stone-300'
+                                  : 'bg-stone-200 text-stone-800 border-stone-400'
+                              }`}
+                            >
+                              <option value="available">Disponible</option>
+                              <option value="in_negotiation">En Negociación</option>
+                              <option value="reserved">Reservado</option>
+                              <option value="sold">Vendido (Archivo)</option>
+                              <option value="hidden">Oculto (Pausado)</option>
+                            </select>
+                          </div>
                         </td>
 
                         {/* Actions */}
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end space-x-1">
+                            {/* 1-Click Hide/Show Toggle */}
+                            <button
+                              onClick={() => {
+                                if (onToggleHideItem) {
+                                  onToggleHideItem(item.id);
+                                } else {
+                                  const isHiddenNow = item.isHidden || item.status === 'hidden';
+                                  onChangeItemStatus(item.id, isHiddenNow ? 'available' : 'hidden');
+                                }
+                              }}
+                              className={`p-1.5 rounded transition-colors ${
+                                item.isHidden || item.status === 'hidden'
+                                  ? 'text-amber-800 bg-amber-100 hover:bg-amber-200'
+                                  : 'text-stone-400 hover:text-stone-800 hover:bg-stone-100'
+                              }`}
+                              title={
+                                item.isHidden || item.status === 'hidden'
+                                  ? 'Producto OCULTO. Haz clic para hacerlo visible en el catálogo'
+                                  : 'Producto VISIBLE. Haz clic para ocultarlo del público'
+                              }
+                            >
+                              {item.isHidden || item.status === 'hidden' ? (
+                                <EyeOff className="w-4 h-4 text-amber-800" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
                             <button
                               onClick={() => onViewItemDetails(item)}
                               className="p-1.5 text-stone-500 hover:text-stone-800 hover:bg-stone-100 rounded"

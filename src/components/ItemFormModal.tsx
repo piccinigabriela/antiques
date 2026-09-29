@@ -20,7 +20,9 @@ import {
   Star,
   Plus,
   Layers,
-  Landmark
+  Landmark,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { AntiqueItem, CategoryType, ConservationState, Dealer } from '../types';
 import { PhotoStudioModal } from './PhotoStudioModal';
@@ -120,6 +122,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
   const [status, setStatus] = useState<AntiqueItem['status']>(initialItem?.status || 'available');
   const [provenance, setProvenance] = useState<string>(initialItem?.provenance || '');
   const [hidePrice, setHidePrice] = useState<boolean>(initialItem?.hidePrice ?? (initialItem?.status === 'sold'));
+  const [isHidden, setIsHidden] = useState<boolean>(initialItem?.isHidden ?? (initialItem?.status === 'hidden' || false));
 
   // AI Cataloging & Photo Studio State
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
@@ -335,11 +338,12 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
       },
       description,
       images: images.length > 0 ? images : [SAMPLE_ANTIQUE_IMAGES[0]],
-      status,
+      status: isHidden && status === 'available' ? 'hidden' : status,
       dealerId: selectedDealerId || activeDealer.id,
       location: location.trim() || undefined,
       provenance: provenance.trim() || undefined,
       hidePrice: hidePrice || status === 'sold',
+      isHidden: isHidden || status === 'hidden',
       featured: initialItem?.featured || false,
       createdAt: initialItem?.createdAt || new Date().toISOString(),
     };
@@ -581,6 +585,9 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                     if (newStatus === 'sold') {
                       setHidePrice(true);
                     }
+                    if (newStatus === 'hidden') {
+                      setIsHidden(true);
+                    }
                   }}
                   className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50 font-medium"
                 >
@@ -588,23 +595,79 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                   <option value="in_negotiation">En Negociación</option>
                   <option value="reserved">Reservado</option>
                   <option value="sold">Vendido (Archivo / Colección Privada)</option>
+                  <option value="hidden">Oculto / Pausado (No visible en catálogo)</option>
                 </select>
               </div>
             </div>
 
-            {/* Opciones de visualización de precio para piezas vendidas o exclusivas */}
-            <div className="pt-2 border-t border-stone-200">
-              <label className="flex items-center space-x-2 text-xs text-stone-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={hidePrice || status === 'sold'}
-                  onChange={(e) => setHidePrice(e.target.checked)}
-                  className="rounded text-[#b45309] focus:ring-[#b45309]"
-                />
-                <span className="font-medium">
-                  Ocultar precio al público en el catálogo {status === 'sold' ? '(Automático para piezas vendidas: figurará como «Vendido • Archivo»)' : '(Mostrar solo como pieza de exhibición sin precio numérico)'}
-                </span>
-              </label>
+            {/* Configuración de Visibilidad & Privacidad */}
+            <div className="pt-3 border-t border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Toggle Ocultar Producto */}
+              <div className={`p-3 rounded-lg border transition-all ${
+                isHidden || status === 'hidden'
+                  ? 'bg-amber-50/80 border-amber-300 text-amber-950'
+                  : 'bg-[#faf8f5] border-stone-200 text-stone-800'
+              }`}>
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isHidden || status === 'hidden'}
+                    onChange={(e) => {
+                      setIsHidden(e.target.checked);
+                      if (!e.target.checked && status === 'hidden') {
+                        setStatus('available');
+                      }
+                    }}
+                    className="mt-0.5 rounded text-amber-700 focus:ring-amber-600"
+                  />
+                  <div>
+                    <span className="text-xs font-bold flex items-center space-x-1.5">
+                      {isHidden || status === 'hidden' ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Producto Oculto del Catálogo</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Producto Visible en el Catálogo</span>
+                        </>
+                      )}
+                    </span>
+                    <p className="text-[11px] text-stone-600 mt-0.5 leading-tight">
+                      {isHidden || status === 'hidden'
+                        ? 'La pieza NO aparecerá en el catálogo público ni en búsquedas. Solo tú podrás verla en tu panel de anticuario para reactivarla cuando quieras.'
+                        : 'La pieza se muestra públicamente en Articuarios y en la sincronización de Pinterest.'}
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Toggle Ocultar Precio */}
+              <div className={`p-3 rounded-lg border transition-all ${
+                hidePrice || status === 'sold'
+                  ? 'bg-stone-100 border-stone-300 text-stone-800'
+                  : 'bg-[#faf8f5] border-stone-200 text-stone-800'
+              }`}>
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hidePrice || status === 'sold'}
+                    onChange={(e) => setHidePrice(e.target.checked)}
+                    className="mt-0.5 rounded text-[#b45309] focus:ring-[#b45309]"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Ocultar Precio al Público
+                    </span>
+                    <p className="text-[11px] text-stone-600 mt-0.5 leading-tight">
+                      {status === 'sold'
+                        ? 'Automático para ventas históricas: figurará como «Vendido • Archivo de Colección» sin valor numérico.'
+                        : 'La pieza se exhibe con la leyenda «Consultar tasación privada».'}
+                    </p>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -643,16 +706,47 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-stone-700 mb-1">
-                  Época / Período Histórico *
+                  Época / Período *
                 </label>
                 <input
                   type="text"
                   required
                   value={period}
                   onChange={(e) => setPeriod(e.target.value)}
-                  placeholder="Ej: Luis XV (ca. 1750), Art Déco 1930..."
+                  placeholder="Ej: Siglo XIX (ca. 1880), Mid-Century 1960s..."
                   className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50"
                 />
+                {/* Era shortcuts */}
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  <button
+                    type="button"
+                    onClick={() => { setPeriod('Siglo XIX (ca. 1880)'); if(!style) setStyle('Neoclásico / Victoriano'); }}
+                    className="text-[10px] px-1.5 py-0.5 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded transition-colors"
+                  >
+                    + Siglo XIX
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPeriod('Art Déco (ca. 1930)'); if(!style) setStyle('Art Déco Francés'); }}
+                    className="text-[10px] px-1.5 py-0.5 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded transition-colors"
+                  >
+                    + Art Déco
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPeriod('Mid-Century Modern (ca. 1960)'); if(!style) setStyle('Mid-Century Modernista'); }}
+                    className="text-[10px] px-1.5 py-0.5 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded transition-colors"
+                  >
+                    + Mid-Century 60s
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPeriod('Vintage Siglo XX (ca. 1970)'); if(!style) setStyle('Diseño Vintage Siglo XX'); }}
+                    className="text-[10px] px-1.5 py-0.5 bg-stone-100 hover:bg-amber-100 text-stone-700 rounded transition-colors"
+                  >
+                    + Vintage 70s
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -664,7 +758,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                   required
                   value={origin}
                   onChange={(e) => setOrigin(e.target.value)}
-                  placeholder="Ej: Francia (París), Inglaterra (Londres)..."
+                  placeholder="Ej: Francia (París), Italia (Milán)..."
                   className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50"
                 />
               </div>
@@ -678,7 +772,7 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                   required
                   value={style}
                   onChange={(e) => setStyle(e.target.value)}
-                  placeholder="Ej: Rococó, Biedermeier, Bauhaus..."
+                  placeholder="Ej: Rococó, Mid-Century, Art Déco..."
                   className="w-full px-3 py-2 bg-[#faf8f5] border border-stone-300 rounded-md text-sm text-stone-900 focus:ring-2 focus:ring-[#b45309]/50"
                 />
               </div>
