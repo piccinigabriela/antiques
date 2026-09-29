@@ -677,12 +677,6 @@ export function getStoredItems(): AntiqueItem[] {
     if (raw !== null) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        // Ensure Alla Foglia's mirror piece is included
-        const hasAllaFoglia = parsed.some((it) => it.id === 'item-alla-foglia-1');
-        if (!hasAllaFoglia && INITIAL_ITEMS.some((it) => it.id === 'item-alla-foglia-1')) {
-          const fogliaItem = INITIAL_ITEMS.find((it) => it.id === 'item-alla-foglia-1')!;
-          return [fogliaItem, ...parsed];
-        }
         return parsed;
       }
     }
