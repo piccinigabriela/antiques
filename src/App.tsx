@@ -49,6 +49,7 @@ import { MagazineView } from './components/MagazineView';
 import { ArticleFormModal } from './components/ArticleFormModal';
 import { LogoModal } from './components/LogoModal';
 import { PinterestCatalogModal } from './components/PinterestCatalogModal';
+import { TermsModal } from './components/TermsModal';
 import { BlogArticle } from './types';
 import { INITIAL_ARTICLES, getStoredArticles, saveStoredArticles } from './data/blogArticles';
 import { classifyItemEra } from './utils/eraClassifier';
@@ -103,6 +104,7 @@ export default function App() {
   const [showDeleteSampleItemsModal, setShowDeleteSampleItemsModal] = useState(false);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [isPinterestModalOpen, setIsPinterestModalOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   const [rotationSeed] = useState(() => Math.floor(Math.random() * 100));
 
@@ -1376,6 +1378,12 @@ export default function App() {
         items={items}
       />
 
+      {/* 9. Modal de Políticas de Venta, Retiro & Venta Final */}
+      <TermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+      />
+
       {/* Footer */}
       <footer className="mt-16 bg-white border-t border-[#e5ddd1] py-8 text-xs text-stone-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -1417,17 +1425,17 @@ export default function App() {
               <BookOpen className="w-3.5 h-3.5 text-amber-800" />
               <span className="font-medium text-stone-900">El Cuaderno del Articuario (Crónicas & Oficios)</span>
             </button>
-            <span className="flex items-center space-x-1">
-              <Award className="w-3.5 h-3.5 text-[#b45309]" />
-              <span>Garantía de Origen</span>
-            </span>
+            <button
+              onClick={() => setIsTermsModalOpen(true)}
+              className="flex items-center space-x-1 hover:text-stone-950 font-medium text-stone-700 transition-colors cursor-pointer"
+              title="Ver condiciones de venta y fletes"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#b45309]" />
+              <span className="underline decoration-stone-300 underline-offset-4 hover:decoration-stone-600">Políticas de Venta & Retiro</span>
+            </button>
             <span className="flex items-center space-x-1">
               <Phone className="w-3.5 h-3.5 text-emerald-600" />
               <span>Cierre Directo por WhatsApp</span>
-            </span>
-            <span className="flex items-center space-x-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-stone-800" />
-              <span>Colección & Peritaje Exclusivo</span>
             </span>
           </div>
         </div>
