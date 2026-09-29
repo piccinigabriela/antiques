@@ -36,9 +36,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const whatsappPurchaseUrl = generateItemWhatsAppUrl(item, dealer, 'purchase');
 
   const handleCopyShare = () => {
-    navigator.clipboard?.writeText(window.location.href);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+    try {
+      const shareUrl = `${window.location.origin}${window.location.pathname}?item=${encodeURIComponent(item.id)}`;
+      navigator.clipboard?.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch {
+      navigator.clipboard?.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
   };
 
   return (

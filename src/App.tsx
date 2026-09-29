@@ -227,6 +227,81 @@ export default function App() {
     saveStoredOffers(offers);
   }, [offers]);
 
+  // Deep linking: Automatically open item / article / dealer / view when coming from Pinterest or shared links
+  useEffect(() => {
+    const syncStateFromUrl = () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const urlItemId = searchParams.get('item') || searchParams.get('id') || searchParams.get('articulo') || searchParams.get('product') || searchParams.get('p');
+        const urlArticleId = searchParams.get('article') || searchParams.get('cronica') || searchParams.get('blog');
+        const urlDealerId = searchParams.get('dealer') || searchParams.get('anticuario') || searchParams.get('galeria');
+        const urlCategory = searchParams.get('category') || searchParams.get('categoria');
+        const urlEra = searchParams.get('era') as 'all' | 'antique' | 'vintage' | null;
+        const urlView = searchParams.get('view') as 'catalog' | 'dealers' | 'services' | 'magazine' | 'negotiations' | 'dealer-panel' | null;
+
+        // 1. Direct item deep link (e.g. from Pinterest Pin or direct link)
+        if (urlItemId && items.length > 0) {
+          const rawId = decodeURIComponent(urlItemId).trim();
+          const targetId = rawId.toLowerCase();
+          const targetSlug = targetId.replace(/[^a-z0-9]/g, '-');
+          
+          const found = items.find((it) => 
+            it.id.toLowerCase() === targetId ||
+            it.sku.toLowerCase() === targetId ||
+            it.title.toLowerCase().replace(/[^a-z0-9]/g, '-').includes(targetSlug) ||
+            it.id.toLowerCase().replace(/[^a-z0-9]/g, '') === targetId.replace(/[^a-z0-9]/g, '')
+          );
+
+          if (found) {
+            setDetailItem(found);
+            document.title = `${found.title} • Articuarios`;
+          }
+        } else if (!urlItemId && detailItem) {
+          setDetailItem(null);
+          document.title = 'Articuarios • Alta Antigüedad & Diseño Vintage';
+        }
+
+        // 2. Direct article link (El Cuaderno)
+        if (urlArticleId && articles.length > 0) {
+          const rawArtId = decodeURIComponent(urlArticleId).trim().toLowerCase();
+          const foundArt = articles.find((a) => a.id.toLowerCase() === rawArtId || a.slug?.toLowerCase() === rawArtId);
+          if (foundArt) {
+            setSelectedArticleId(foundArt.id);
+            setCurrentView('magazine');
+          }
+        }
+
+        // 3. Filter by dealer
+        if (urlDealerId) {
+          setFilters((prev) => ({ ...prev, dealerId: urlDealerId }));
+        }
+
+        // 4. Filter by category
+        if (urlCategory) {
+          setFilters((prev) => ({ ...prev, category: decodeURIComponent(urlCategory) }));
+        }
+
+        // 5. Filter by era
+        if (urlEra && ['all', 'antique', 'vintage'].includes(urlEra)) {
+          setFilters((prev) => ({ ...prev, eraType: urlEra }));
+        }
+
+        // 6. Direct View navigation
+        if (urlView && ['catalog', 'dealers', 'services', 'magazine', 'negotiations', 'dealer-panel'].includes(urlView)) {
+          setCurrentView(urlView);
+        }
+      } catch (err) {
+        console.warn('Error reading deep link parameters:', err);
+      }
+    };
+
+    syncStateFromUrl();
+    window.addEventListener('popstate', syncStateFromUrl);
+    return () => {
+      window.removeEventListener('popstate', syncStateFromUrl);
+    };
+  }, [items, articles]);
+
   // Derived filter options from actual catalog
   const availableCategories = useMemo(() => {
     return Array.from(new Set(items.map((it) => it.category)));
@@ -599,6 +674,37 @@ export default function App() {
     setCurrentView('catalog');
   };
 
+  // Helper to open and close item details modal with URL & history sync
+  const handleOpenDetailItem = (item: AntiqueItem) => {
+    setDetailItem(item);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('item', item.id);
+      window.history.pushState({ itemId: item.id }, '', url.toString());
+      document.title = `${item.title} • Articuarios`;
+    } catch (e) {
+      console.warn('Could not update history state:', e);
+    }
+  };
+
+  const handleCloseDetailItem = () => {
+    setDetailItem(null);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('item');
+      url.searchParams.delete('id');
+      url.searchParams.delete('articulo');
+      url.searchParams.delete('product');
+      url.searchParams.delete('p');
+      const searchStr = url.searchParams.toString();
+      const newUrl = searchStr ? `${url.pathname}?${searchStr}` : url.pathname;
+      window.history.pushState({}, '', newUrl);
+      document.title = 'Articuarios • Alta Antigüedad & Diseño Vintage';
+    } catch (e) {
+      console.warn('Could not reset history state:', e);
+    }
+  };
+
   // Dealer login & logout
   const handleLoginSuccess = (dealer: Dealer, asAdmin: boolean = false) => {
     setAuthenticatedDealer(dealer);
@@ -914,7 +1020,7 @@ export default function App() {
                       key={item.id}
                       item={item}
                       dealer={itemDealer}
-                      onViewDetails={(it) => setDetailItem(it)}
+                      onViewDetails={(it) => handleOpenDetailItem(it)}
                       onOpenNegotiation={(it) => handleOpenNegotiation(it)}
                     />
                   );
@@ -953,7 +1059,7 @@ export default function App() {
             articles={articles}
             catalogItems={items}
             dealers={dealers}
-            onOpenItemDetail={(item) => setDetailItem(item)}
+            onOpenItemDetail={(item) => handleOpenDetailItem(item)}
             onOpenArticleCreateModal={isAdmin ? () => {
               setArticleToEdit(null);
               setIsArticleFormOpen(true);
@@ -1014,7 +1120,7 @@ export default function App() {
             onDeleteItem={handleDeleteItem}
             onChangeItemStatus={handleChangeItemStatus}
             onToggleHideItem={handleToggleHideItem}
-            onViewItemDetails={(item) => setDetailItem(item)}
+            onViewItemDetails={(item) => handleOpenDetailItem(item)}
             onUpdateOffer={handleSaveOffer}
             onUpdateDealer={handleUpdateDealer}
             onDeleteDealer={isAdmin ? handleDeleteDealer : undefined}
@@ -1044,13 +1150,13 @@ export default function App() {
         <ProductDetailModal
           item={detailItem}
           dealer={dealers.find((d) => d.id === detailItem.dealerId) || activeDealer}
-          onClose={() => setDetailItem(null)}
+          onClose={handleCloseDetailItem}
           onOpenNegotiation={(it) => handleOpenNegotiation(it)}
           onOpenReservation={(it) => {
             setReservationItem(it);
           }}
           onFilterByDealer={(dealerId) => {
-            setDetailItem(null);
+            handleCloseDetailItem();
             handleFilterByDealer(dealerId);
           }}
           onToggleHideItem={
@@ -1063,7 +1169,7 @@ export default function App() {
           onDeleteItem={
             authenticatedDealer && (isAdmin || authenticatedDealer.id === detailItem.dealerId)
               ? (itemId) => {
-                  setDetailItem(null);
+                  handleCloseDetailItem();
                   handleDeleteItem(itemId);
                 }
               : undefined
