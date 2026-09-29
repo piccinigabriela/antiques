@@ -304,6 +304,23 @@ export default function App() {
     };
   }, [items, articles]);
 
+  // Track SPA pageviews in GoatCounter analytics
+  useEffect(() => {
+    try {
+      const gc = (window as any).goatcounter;
+      if (gc && typeof gc.count === 'function') {
+        const path = window.location.pathname + window.location.search;
+        gc.count({
+          path: path || '/',
+          title: document.title,
+          event: false,
+        });
+      }
+    } catch {
+      // Graceful fallback if analytics blocker is present
+    }
+  }, [currentView, detailItem?.id, selectedArticleId]);
+
   // Derived filter options from actual catalog
   const availableCategories = useMemo(() => {
     return Array.from(new Set(items.map((it) => it.category)));
