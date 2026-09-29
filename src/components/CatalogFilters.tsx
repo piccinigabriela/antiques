@@ -39,7 +39,7 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
       onlyAvailable: true,
       minPrice: null,
       maxPrice: null,
-      sortBy: 'newest',
+      sortBy: 'rotation',
     });
   };
 
@@ -153,10 +153,11 @@ export const CatalogFilters: React.FC<CatalogFiltersProps> = ({
               }
               className="py-1.5 px-2.5 bg-[#fbf9f6] border border-[#ded6c9] rounded-full text-xs font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-stone-800 cursor-pointer"
             >
-              <option value="newest">Novedades</option>
-              <option value="price_asc">Precio: menor a mayor</option>
-              <option value="price_desc">Precio: mayor a menor</option>
-              <option value="period">Por Época</option>
+              <option value="rotation">✨ Vitrina Rotativa (Equitativa)</option>
+              <option value="newest">⏱️ Más recientes primero</option>
+              <option value="price_asc">💵 Precio: menor a mayor</option>
+              <option value="price_desc">💎 Precio: mayor a menor</option>
+              <option value="period">🏛️ Por Época histórica</option>
             </select>
           </div>
 

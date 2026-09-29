@@ -121,7 +121,7 @@ export interface CatalogFilterState {
   onlyAvailable: boolean;
   minPrice: number | null;
   maxPrice: number | null;
-  sortBy: 'price_asc' | 'price_desc' | 'newest' | 'period';
+  sortBy: 'rotation' | 'newest' | 'price_asc' | 'price_desc' | 'period';
 }
 
 export type ArticleCategory =

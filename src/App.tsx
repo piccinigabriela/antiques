@@ -104,6 +104,8 @@ export default function App() {
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [isPinterestModalOpen, setIsPinterestModalOpen] = useState(false);
 
+  const [rotationSeed] = useState(() => Math.floor(Math.random() * 100));
+
   // Filters state
   const [filters, setFilters] = useState<CatalogFilterState>({
     searchTerm: '',
@@ -116,7 +118,7 @@ export default function App() {
     onlyAvailable: true,
     minPrice: null,
     maxPrice: null,
-    sortBy: 'newest',
+    sortBy: 'rotation',
   });
 
   // Sync to local storage and listen to Firestore in real-time
@@ -324,7 +326,7 @@ export default function App() {
 
   // Filtered and sorted catalog items
   const filteredItems = useMemo(() => {
-    return items.filter((item) => {
+    const matched = items.filter((item) => {
       // Never show hidden items in public catalog or search
       if (item.isHidden || item.status === 'hidden') {
         return false;
@@ -396,7 +398,59 @@ export default function App() {
       }
 
       return true;
-    }).sort((a, b) => {
+    });
+
+    // 1. Vitrina Rotativa Equitativa (Intercalada por Anticuario / Galería)
+    if (filters.sortBy === 'rotation') {
+      const dealerBuckets: Record<string, AntiqueItem[]> = {};
+      const dealerOrder: string[] = [];
+
+      // Sort items within each dealer newest first
+      const sortedByDate = [...matched].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      sortedByDate.forEach((item) => {
+        if (!dealerBuckets[item.dealerId]) {
+          dealerBuckets[item.dealerId] = [];
+          dealerOrder.push(item.dealerId);
+        }
+        dealerBuckets[item.dealerId].push(item);
+      });
+
+      if (dealerOrder.length <= 1) {
+        return sortedByDate;
+      }
+
+      // Rotate starting dealer with session seed so every user takes turns at the top
+      const offset = rotationSeed % dealerOrder.length;
+      const rotatedDealers = [
+        ...dealerOrder.slice(offset),
+        ...dealerOrder.slice(0, offset),
+      ];
+
+      const rotatedList: AntiqueItem[] = [];
+      let round = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        hasMore = false;
+        for (const dId of rotatedDealers) {
+          if (dealerBuckets[dId] && dealerBuckets[dId][round]) {
+            rotatedList.push(dealerBuckets[dId][round]);
+            if (dealerBuckets[dId][round + 1]) {
+              hasMore = true;
+            }
+          }
+        }
+        round++;
+      }
+
+      return rotatedList;
+    }
+
+    // 2. Standard sorting modes
+    return matched.sort((a, b) => {
       if (filters.sortBy === 'price_asc') {
         return a.price - b.price;
       }
@@ -409,7 +463,7 @@ export default function App() {
       // newest
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [items, filters]);
+  }, [items, filters, rotationSeed]);
 
   // Handlers for Items
   const handleSaveItem = async (savedItem: AntiqueItem) => {
