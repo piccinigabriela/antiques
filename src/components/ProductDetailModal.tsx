@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Award, ShieldCheck, MapPin, Phone, MessageSquareQuote, CheckCircle2, AlertCircle, Share2, Truck, Sparkles, Trash2, Instagram, Landmark, Eye, EyeOff } from 'lucide-react';
+import { X, Award, ShieldCheck, MapPin, Phone, MessageSquareQuote, CheckCircle2, AlertCircle, Share2, Check, Truck, Sparkles, Trash2, Instagram, Landmark, Eye, EyeOff } from 'lucide-react';
 import { AntiqueItem, Dealer } from '../types';
 import { formatCurrency, generateItemWhatsAppUrl } from '../utils/whatsapp';
 import { classifyItemEra } from '../utils/eraClassifier';
@@ -37,15 +37,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const whatsappReserveUrl = generateItemWhatsAppUrl(item, dealer, 'reserve');
 
   const handleCopyShare = () => {
+    const cleanUrl = `https://articuarios.store/?item=${encodeURIComponent(item.id)}`;
     try {
-      const shareUrl = `${window.location.origin}${window.location.pathname}?item=${encodeURIComponent(item.id)}`;
-      navigator.clipboard?.writeText(shareUrl);
+      navigator.clipboard?.writeText(cleanUrl);
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
+      setTimeout(() => setCopiedLink(false), 3000);
     } catch {
-      navigator.clipboard?.writeText(window.location.href);
+      try {
+        navigator.clipboard?.writeText(window.location.href);
+      } catch {}
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2500);
+      setTimeout(() => setCopiedLink(false), 3000);
     }
   };
 
@@ -102,12 +104,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </button>
             )}
             <button
+              type="button"
               onClick={handleCopyShare}
-              className="p-1.5 text-stone-500 hover:text-stone-800 hover:bg-stone-200/60 rounded-md transition-colors text-xs flex items-center space-x-1"
-              title="Compartir ficha"
+              className={`px-2.5 py-1.5 rounded-md transition-all text-xs flex items-center space-x-1.5 cursor-pointer font-medium ${
+                copiedLink 
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs' 
+                  : 'bg-stone-100 text-stone-700 hover:text-stone-900 hover:bg-stone-200 border border-stone-200'
+              }`}
+              title={copiedLink ? "¡Enlace copiado!" : "Compartir o copiar enlace de esta pieza"}
             >
-              <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline">{copiedLink ? '¡Copiado!' : 'Compartir'}</span>
+              {copiedLink ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>¡Enlace copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5 text-stone-500" />
+                  <span className="hidden sm:inline">
+                    {onToggleHideItem ? '📌 Link Pinterest / Compartir' : 'Compartir'}
+                  </span>
+                  <span className="sm:hidden">Compartir</span>
+                </>
+              )}
             </button>
             <button
               onClick={onClose}

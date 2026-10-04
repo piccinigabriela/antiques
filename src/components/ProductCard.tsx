@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, MessageSquareQuote, Phone, Heart, ArrowUpRight, MapPin, Layers, Sparkles } from 'lucide-react';
+import { Award, MessageSquareQuote, Phone, Heart, ArrowUpRight, MapPin, Layers, Sparkles, Share2, Check } from 'lucide-react';
 import { AntiqueItem, Dealer } from '../types';
 import { formatCurrency, generateItemWhatsAppUrl } from '../utils/whatsapp';
 import { classifyItemEra } from '../utils/eraClassifier';
@@ -18,8 +18,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onOpenNegotiation,
 }) => {
   const [isSaved, setIsSaved] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const whatsappInquireUrl = generateItemWhatsAppUrl(item, dealer, 'inquire');
   const eraInfo = classifyItemEra(item.period, item.style);
+
+  const handleCopyPinterestLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const cleanUrl = `https://articuarios.store/?item=${encodeURIComponent(item.id)}`;
+    try {
+      navigator.clipboard?.writeText(cleanUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
 
   const statusLabels: Record<string, { label: string; class: string }> = {
     available: { label: '', class: '' },
@@ -164,6 +178,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Clean minimal action buttons */}
           <div className="flex items-center space-x-1.5">
+            <button
+              type="button"
+              id={`card-share-btn-${item.id}`}
+              onClick={handleCopyPinterestLink}
+              title={copiedLink ? "¡Enlace copiado!" : "Compartir o copiar enlace de esta pieza"}
+              className={`p-2 rounded transition-all cursor-pointer flex items-center relative ${
+                copiedLink 
+                  ? 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-400' 
+                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+              }`}
+            >
+              {copiedLink ? (
+                <Check className="w-4 h-4 text-emerald-700" />
+              ) : (
+                <Share2 className="w-4 h-4" />
+              )}
+            </button>
+
             {item.status !== 'sold' && (
               <button
                 id={`card-negotiate-btn-${item.id}`}

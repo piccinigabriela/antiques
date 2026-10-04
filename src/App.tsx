@@ -31,7 +31,7 @@ import {
   saveDealerToFirestore,
   deleteDealerFromFirestore
 } from './services/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { Navbar } from './components/Navbar';
 import { ProductCard } from './components/ProductCard';
 import { ProductDetailModal } from './components/ProductDetailModal';
@@ -236,29 +236,60 @@ export default function App() {
     const syncStateFromUrl = () => {
       try {
         const searchParams = new URLSearchParams(window.location.search);
-        const urlItemId = searchParams.get('item') || searchParams.get('id') || searchParams.get('articulo') || searchParams.get('product') || searchParams.get('p');
+        let urlItemId = searchParams.get('item') || searchParams.get('id') || searchParams.get('articulo') || searchParams.get('product') || searchParams.get('p');
+        
+        // Also check hash for deep links (e.g. #item=XYZ or #/item/XYZ or #item-123)
+        if (!urlItemId && window.location.hash) {
+          const hashClean = window.location.hash.replace(/^#\/?/, '');
+          const hashParams = new URLSearchParams(hashClean.includes('?') ? hashClean.split('?')[1] : hashClean);
+          urlItemId = hashParams.get('item') || hashParams.get('id') || hashParams.get('product') || hashParams.get('p');
+          if (!urlItemId && (hashClean.startsWith('item-') || hashClean.startsWith('item/'))) {
+            urlItemId = hashClean.replace(/^item\//, '');
+          }
+        }
+
+        // Also check pathname (e.g. /item/item-123 or /item-123 or /p/item-123)
+        if (!urlItemId && window.location.pathname && window.location.pathname !== '/') {
+          const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+          const pathParts = path.split('/');
+          if (['item', 'p', 'producto', 'articulo', 'pieza'].includes(pathParts[0]) && pathParts[1]) {
+            urlItemId = pathParts[1];
+          } else if (path.startsWith('item-')) {
+            urlItemId = path;
+          }
+        }
+
         const urlArticleId = searchParams.get('article') || searchParams.get('cronica') || searchParams.get('blog');
         const urlDealerId = searchParams.get('dealer') || searchParams.get('anticuario') || searchParams.get('galeria');
         const urlCategory = searchParams.get('category') || searchParams.get('categoria');
         const urlEra = searchParams.get('era') as 'all' | 'antique' | 'vintage' | null;
         const urlView = searchParams.get('view') as 'catalog' | 'dealers' | 'services' | 'magazine' | 'negotiations' | 'dealer-panel' | null;
 
-        // 1. Direct item deep link (e.g. from Pinterest Pin or direct link)
-        if (urlItemId && items.length > 0) {
+        // 1. Direct item deep link (e.g. from Pinterest Pin, social share or direct link)
+        if (urlItemId) {
           const rawId = decodeURIComponent(urlItemId).trim();
           const targetId = rawId.toLowerCase();
           const targetSlug = targetId.replace(/[^a-z0-9]/g, '-');
           
           const found = items.find((it) => 
             it.id.toLowerCase() === targetId ||
-            it.sku.toLowerCase() === targetId ||
-            it.title.toLowerCase().replace(/[^a-z0-9]/g, '-').includes(targetSlug) ||
-            it.id.toLowerCase().replace(/[^a-z0-9]/g, '') === targetId.replace(/[^a-z0-9]/g, '')
+            (it.sku && it.sku.toLowerCase() === targetId) ||
+            it.id.toLowerCase().replace(/[^a-z0-9]/g, '') === targetId.replace(/[^a-z0-9]/g, '') ||
+            (targetSlug.length > 4 && it.title.toLowerCase().replace(/[^a-z0-9]/g, '-').includes(targetSlug))
           );
 
           if (found) {
             setDetailItem(found);
             document.title = `${found.title} • Articuarios`;
+          } else {
+            // If item not yet loaded in local array, fetch directly from Firestore by ID
+            getDoc(doc(db, ITEMS_COLLECTION, rawId)).then((snap) => {
+              if (snap.exists()) {
+                const fetchedItem = snap.data() as AntiqueItem;
+                setDetailItem(fetchedItem);
+                document.title = `${fetchedItem.title} • Articuarios`;
+              }
+            }).catch((err) => console.warn('Could not fetch deep linked item:', err));
           }
         } else if (!urlItemId && detailItem) {
           setDetailItem(null);
